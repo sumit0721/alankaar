@@ -1,0 +1,22 @@
+:root {
+  --font-body: "Aptos", "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --color-background: #f8efe8;
+  --color-background-alt: #f4e3d5;
+  --color-surface: rgba(255, 250, 246, 0.82);
+  --color-surface-strong: #fff7f1;
+  --color-surface-dark: #2e211d;
+  --color-text: #2f211d;
+  --color-muted: #755d54;
+  --color-accent: #be6a4a;
+  --color-accent-dark: #8f472d;
+  --color-accent-soft: #f2d0bf;
+  --color-border: rgba(148, 102, 82, 0.18);
+  --shadow-soft: 0 22px 50px rgba(78, 43, 28, 0.1);
+  --shadow-card: 0 20px 40px rgba(65, 35, 24, 0.08);
+  --radius-large: 28px;
+  --radius-medium: 18px;
+  --radius-small: 12px;
+  --container-width: 1120px;
+  --transition-base: 200ms ease;
+}
