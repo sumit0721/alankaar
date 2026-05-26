@@ -20,11 +20,15 @@ const isAllowedOrigin = (origin) => {
     return true;
   }
 
-  if (origin === allowedClientOrigin) {
+  // Strip trailing slashes to prevent dynamic domain preflight errors
+  const normalizedOrigin = origin.replace(/\/$/, "");
+  const normalizedClientOrigin = allowedClientOrigin.replace(/\/$/, "");
+
+  if (normalizedOrigin === normalizedClientOrigin) {
     return true;
   }
 
-  return /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
+  return /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(normalizedOrigin);
 };
 
 // ============================================
