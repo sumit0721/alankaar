@@ -4,6 +4,7 @@ import morgan from "morgan";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
+import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
@@ -33,10 +34,10 @@ const isAllowedOrigin = (origin) => {
 // Helmet helps secure Express apps by setting various HTTP headers
 app.use(helmet());
 
-// Rate limiting to prevent abuse
+// Rate limiting to prevent abuse (significantly higher limits in development)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === "production" ? 100 : 10000, // Limit each IP to 100 requests (production) or 10,000 requests (development)
   message: "Too many requests from this IP, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
@@ -48,7 +49,7 @@ app.use(limiter);
 // Stricter rate limiting for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5, // 5 requests per 15 minutes
+  max: process.env.NODE_ENV === "production" ? 50 : 5000, // Stricter in production, high in dev to prevent blocking dev reloads
   message: "Too many login attempts, please try again later.",
 });
 
@@ -74,8 +75,8 @@ const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
 app.use(morgan(morganFormat));
 
 // Body parsing middleware
-app.use(express.json({ limit: "10kb" })); // Limit payload to prevent abuse
-app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+app.use(express.json({ limit: "50mb" })); // Limit payload to prevent abuse
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // ============================================
 // HEALTH CHECK ENDPOINT
@@ -94,6 +95,7 @@ app.get("/api/health", (req, res) => {
 // ============================================
 
 app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);

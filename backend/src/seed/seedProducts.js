@@ -27,7 +27,7 @@ const seedProducts = async () => {
 
     // Insert new products
     const insertResult = await mongoose.connection.collection("products").insertMany(sampleProducts);
-    console.log(`Inserted ${insertResult.insertedIds.length} new products`);
+    console.log(`Inserted ${sampleProducts.length} new products`);
 
     console.log("✅ Sample products seeded successfully");
     clearTimeout(timeout);

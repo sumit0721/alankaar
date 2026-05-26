@@ -108,6 +108,35 @@ function OrderDetailsPage() {
           </div>
 
           <div className="order-section">
+            <h2>Order Status</h2>
+            <p className={`order-status-badge status-${order.orderStatus || "pending"}`}>
+              {(order.orderStatus || "pending").charAt(0).toUpperCase() + 
+               (order.orderStatus || "pending").slice(1)}
+            </p>
+            <div className="order-status-timeline">
+              {["pending","processing","packed","shipped","delivered"].map((step, index) => {
+                const allStatuses = ["pending","processing","packed","shipped","delivered"];
+                const currentIndex = allStatuses.indexOf(order.orderStatus || "pending");
+                const isCancelled = order.orderStatus === "cancelled";
+                const isCompleted = index <= currentIndex && !isCancelled;
+                const isCurrent = index === currentIndex && !isCancelled;
+                return (
+                  <div key={step} className={`timeline-step ${isCompleted ? "completed" : ""} ${isCurrent ? "current" : ""} ${isCancelled ? "cancelled" : ""}`}>
+                    <div className="timeline-dot" />
+                    <span>{step.charAt(0).toUpperCase() + step.slice(1)}</span>
+                  </div>
+                );
+              })}
+              {order.orderStatus === "cancelled" && (
+                <div className="timeline-step cancelled">
+                  <div className="timeline-dot" />
+                  <span>Cancelled</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="order-section">
             <h2>Items</h2>
             <div className="checkout-items">
               {order.orderItems.map((item) => (

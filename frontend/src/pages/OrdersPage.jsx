@@ -76,6 +76,9 @@ function OrdersPage() {
                   ? "Payment confirmed and order placed"
                   : "Order placed, awaiting payment confirmation"}
               </p>
+              <p className={`order-status-badge status-${order.orderStatus || "pending"}`}>
+                {(order.orderStatus || "pending").charAt(0).toUpperCase() + (order.orderStatus || "pending").slice(1)}
+              </p>
 
               <Link to={`/orders/${order._id}`} className="secondary-button">
                 View Order

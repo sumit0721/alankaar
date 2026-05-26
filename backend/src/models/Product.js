@@ -52,6 +52,19 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    skinType: {
+      type: String,
+      default: "All Types",
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    gender: {
+      type: String,
+      enum: ["Unisex", "Women", "Men"],
+      default: "Unisex",
+    },
   },
   {
     timestamps: true,

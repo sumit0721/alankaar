@@ -55,6 +55,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
     cartItems: {
       type: [cartItemSchema],
       default: [],

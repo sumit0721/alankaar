@@ -7,6 +7,8 @@ import { useCart } from "../context/CartContext.jsx";
 import { getProductById } from "../services/productService.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 
+import { getFallbackImage } from "../utils/fallbackImages.js";
+
 function ProductDetailsPage() {
   const { productId } = useParams();
   const location = useLocation();
@@ -17,6 +19,19 @@ function ProductDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cartFeedback, setCartFeedback] = useState({ type: "", message: "" });
+  const [imgSrc, setImgSrc] = useState("");
+
+  useEffect(() => {
+    if (product) {
+      setImgSrc(product.image || getFallbackImage(product.category, product.name));
+    }
+  }, [product]);
+
+  const handleImageError = () => {
+    if (product) {
+      setImgSrc(getFallbackImage(product.category, product.name));
+    }
+  };
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -65,11 +80,13 @@ function ProductDetailsPage() {
             {product.featured ? <span className="product-featured-badge">Best Seller</span> : null}
           </div>
 
-          {product.image ? (
-            <img src={product.image} alt={product.name} className="product-details-image" />
-          ) : (
-            <div className="product-image-placeholder">{product.name}</div>
-          )}
+          <img
+            src={imgSrc}
+            alt={product.name}
+            className="product-details-image"
+            onError={handleImageError}
+            style={{ display: "block" }}
+          />
         </div>
 
         <div className="product-details-content">

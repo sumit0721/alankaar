@@ -62,6 +62,9 @@ export const createProduct = asyncHandler(async (req, res) => {
     rating,
     numReviews,
     featured,
+    skinType,
+    tags,
+    gender,
   } = req.body;
 
   if (!name || !description || !category || price === undefined || countInStock === undefined) {
@@ -79,6 +82,9 @@ export const createProduct = asyncHandler(async (req, res) => {
     rating,
     numReviews,
     featured,
+    skinType,
+    tags,
+    gender,
   });
 
   res.status(201).json({
@@ -112,6 +118,9 @@ export const updateProduct = asyncHandler(async (req, res) => {
     "rating",
     "numReviews",
     "featured",
+    "skinType",
+    "tags",
+    "gender",
   ];
 
   fields.forEach((field) => {

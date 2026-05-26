@@ -47,6 +47,7 @@ export default defineConfig({
           react: ["react", "react-dom"],
           router: ["react-router-dom"],
           axios: ["axios"],
+          recharts: ["recharts"],
         },
       },
     },
