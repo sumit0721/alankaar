@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import Loader from "../components/common/Loader.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -42,6 +43,7 @@ function LoginPage() {
       setSubmitting(true);
       const response = await loginUser(formData);
       login(response.data.data);
+      toast.success("Login successful!");
       navigate(redirectPath, { replace: true });
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Login failed. Please try again.");
@@ -115,6 +117,10 @@ function LoginPage() {
                 placeholder="Enter your password"
               />
             </label>
+
+            <div className="form-helper-text" style={{ textAlign: "right", marginBottom: "0.5rem" }}>
+              <Link to="/forgot-password">Forgot password?</Link>
+            </div>
 
             <button type="submit" className="primary-button" disabled={submitting}>
               {submitting ? "Signing In..." : "Login"}

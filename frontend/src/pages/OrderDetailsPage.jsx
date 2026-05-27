@@ -140,15 +140,25 @@ function OrderDetailsPage() {
             <h2>Items</h2>
             <div className="checkout-items">
               {order.orderItems.map((item) => (
-                <div key={item.product} className="checkout-item">
-                  <div>
-                    <strong>{item.name}</strong>
-                    <p>
-                      {item.quantity} x {formatCurrency(item.price)}
-                    </p>
+                <div key={item.product} className="checkout-item" style={{ flexDirection: "column", alignItems: "flex-start", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
+                    <div>
+                      <strong>{item.name}</strong>
+                      <p>
+                        {item.quantity} x {formatCurrency(item.price)}
+                      </p>
+                    </div>
+                    <span>{formatCurrency(item.quantity * item.price)}</span>
                   </div>
-
-                  <span>{formatCurrency(item.quantity * item.price)}</span>
+                  {order.orderStatus === "delivered" && (
+                    <Link
+                      to={`/products/${item.product}?writeReview=true`}
+                      className="text-button"
+                      style={{ fontSize: "0.85rem", color: "var(--color-accent)", textDecoration: "underline", padding: "0.25rem 0", display: "inline-flex", alignItems: "center", minHeight: "unset" }}
+                    >
+                      ✍️ Review this product
+                    </Link>
+                  )}
                 </div>
               ))}
             </div>

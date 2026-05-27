@@ -143,6 +143,25 @@ function AdminProductsPage() {
       ),
     },
     {
+      key: "rating",
+      label: "Rating",
+      render: (product) => (
+        <span>
+          {product.rating > 0 ? (
+            <span style={{ color: "#f39c12", display: "inline-flex", alignItems: "center", gap: "0.2rem" }}>
+              {"★".repeat(Math.round(product.rating))}
+              {"☆".repeat(5 - Math.round(product.rating))}
+              <span style={{ color: "var(--color-muted)", fontSize: "0.82rem", marginLeft: "0.25rem" }}>
+                ({product.rating.toFixed(1)})
+              </span>
+            </span>
+          ) : (
+            <span style={{ color: "var(--color-muted)", fontSize: "0.85rem" }}>No reviews</span>
+          )}
+        </span>
+      ),
+    },
+    {
       key: "featured",
       label: "Featured",
       render: (product) => (

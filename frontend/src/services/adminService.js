@@ -16,3 +16,7 @@ export const getAdminOrders = (params) => api.get("/admin/orders", { params });
 
 export const updateAdminOrderStatus = (orderId, status) =>
   api.patch(`/admin/orders/${orderId}/status`, { status });
+
+export const getAllReviews = (params) => api.get("/admin/reviews", { params });
+
+export const deleteReview = (reviewId) => api.delete(`/admin/reviews/${reviewId}`);

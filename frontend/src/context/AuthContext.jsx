@@ -50,6 +50,14 @@ export function AuthProvider({ children }) {
     localStorage.setItem("authUser", JSON.stringify(userData));
   };
 
+  const updateUser = (updatedData) => {
+    setUser((prev) => {
+      const merged = { ...prev, ...updatedData };
+      localStorage.setItem("authUser", JSON.stringify(merged));
+      return merged;
+    });
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("authUser");
@@ -62,6 +70,7 @@ export function AuthProvider({ children }) {
         authLoading,
         login: saveAuthUser,
         register: saveAuthUser,
+        updateUser,
         logout,
       }}
     >

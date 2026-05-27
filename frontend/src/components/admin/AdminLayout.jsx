@@ -7,6 +7,7 @@ const links = [
   { to: "/admin/products", label: "Products", icon: "◇" },
   { to: "/admin/orders", label: "Orders", icon: "▣" },
   { to: "/admin/users", label: "Users", icon: "○" },
+  { to: "/admin/reviews", label: "Reviews", icon: "★" },
 ];
 
 function AdminLayout() {

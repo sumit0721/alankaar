@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import Loader from "../components/common/Loader.jsx";
 import { useCart } from "../context/CartContext.jsx";
@@ -141,6 +142,7 @@ function CheckoutPage() {
       }
 
       await refreshCart();
+      toast.success("Order placed successfully!");
       navigate(`/orders/${createdOrder._id}`, { replace: true });
     } catch (requestError) {
       setError(

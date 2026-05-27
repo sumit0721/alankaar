@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import { useAuth } from "../context/AuthContext.jsx";
 import { registerUser } from "../services/authService.js";
@@ -60,6 +61,7 @@ function RegisterPage() {
       });
 
       register(response.data.data);
+      toast.success("Account created successfully!");
       navigate("/", { replace: true });
     } catch (requestError) {
       setError(

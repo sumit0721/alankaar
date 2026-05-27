@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import Loader from "../common/Loader.jsx";
+import SkeletonCard from "../common/SkeletonCard.jsx";
 import ProductGrid from "../products/ProductGrid.jsx";
 import { getProducts } from "../../services/productService.js";
 
@@ -36,7 +36,13 @@ function FeaturedProducts() {
           <h2>Bestsellers your customers notice first</h2>
         </div>
 
-        {loading ? <Loader /> : null}
+        {loading ? (
+          <div className="card-grid">
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <SkeletonCard key={n} />
+            ))}
+          </div>
+        ) : null}
         {error ? <p className="status-message error-message">{error}</p> : null}
         {!loading && !error ? <ProductGrid products={products} /> : null}
       </div>

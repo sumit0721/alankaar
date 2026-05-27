@@ -1,12 +1,16 @@
 import BrandStory from "../components/home/BrandStory.jsx";
 import FeaturedProducts from "../components/home/FeaturedProducts.jsx";
 import Hero from "../components/home/Hero.jsx";
+import BestSellers from "../components/home/BestSellers.jsx";
+import WhyAlankaar from "../components/home/WhyAlankaar.jsx";
+import NewsletterSignup from "../components/home/NewsletterSignup.jsx";
 
 function HomePage() {
   return (
     <>
       <Hero />
       <FeaturedProducts />
+      <BestSellers />
       <BrandStory />
 
       <section className="section-block">
@@ -38,6 +42,8 @@ function HomePage() {
         </div>
       </section>
 
+      <WhyAlankaar />
+
       <section className="section-block testimonial-band">
         <div className="container testimonial-layout">
           <div>
@@ -52,6 +58,8 @@ function HomePage() {
           </p>
         </div>
       </section>
+
+      <NewsletterSignup />
     </>
   );
 }

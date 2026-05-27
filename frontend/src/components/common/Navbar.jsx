@@ -1,60 +1,44 @@
+import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useCart } from "../../context/CartContext.jsx";
-import { getAdminStats } from "../../services/adminService.js";
 
 function Navbar() {
   const { user, logout } = useAuth();
   const { totalQuantity } = useCart();
   const navigate = useNavigate();
-  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
-
-  useEffect(() => {
-    if (!user?.isAdmin) {
-      setPendingOrdersCount(0);
-      return;
-    }
-
-    const loadAdminBadge = async () => {
-      try {
-        const response = await getAdminStats();
-        setPendingOrdersCount(response.data.data.pendingOrdersCount || 0);
-      } catch (error) {
-        setPendingOrdersCount(0);
-      }
-    };
-
-    loadAdminBadge();
-  }, [user]);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
+    setMenuOpen(false);
     navigate("/login");
   };
+
+  const closeMenu = () => setMenuOpen(false);
 
   return (
     <header className="site-header">
       <div className="container nav-wrapper">
-        <Link to="/" className="brand-logo">
+        <Link to="/" className="brand-logo" onClick={closeMenu}>
           ALANKAAR
         </Link>
 
-        <nav className="nav-links">
+        {/* Desktop Navigation */}
+        <nav className="nav-desktop">
           <NavLink to="/">Home</NavLink>
           <NavLink to="/products">Products</NavLink>
-          <NavLink to="/cart">Cart {totalQuantity ? `(${totalQuantity})` : ""}</NavLink>
+          <NavLink to="/cart">
+            Cart {totalQuantity ? `(${totalQuantity})` : ""}
+          </NavLink>
           {user ? (
             <>
               <NavLink to="/orders">Orders</NavLink>
+              <NavLink to="/wishlist">Wishlist</NavLink>
+              <NavLink to="/profile">Profile</NavLink>
               {user.isAdmin ? (
-                <NavLink to="/admin">
-                  Admin
-                  {pendingOrdersCount ? (
-                    <span className="nav-badge">{pendingOrdersCount}</span>
-                  ) : null}
-                </NavLink>
+                <NavLink to="/admin">Admin</NavLink>
               ) : null}
               <span className="nav-user">Hi, {user.name.split(" ")[0]}</span>
               <button type="button" className="nav-button" onClick={handleLogout}>
@@ -65,6 +49,52 @@ function Navbar() {
             <>
               <NavLink to="/login">Login</NavLink>
               <NavLink to="/register">Register</NavLink>
+            </>
+          )}
+        </nav>
+
+        {/* Mobile: cart icon + hamburger */}
+        <div className="nav-mobile-right">
+          <Link to="/cart" className="mobile-cart-icon" onClick={closeMenu}>
+            🛒
+            {totalQuantity ? (
+              <span className="cart-badge">{totalQuantity}</span>
+            ) : null}
+          </Link>
+
+          <button
+            type="button"
+            className={`hamburger ${menuOpen ? "active" : ""}`}
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-label="Toggle menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        <nav className={`nav-mobile-menu ${menuOpen ? "open" : ""}`}>
+          <NavLink to="/" onClick={closeMenu}>Home</NavLink>
+          <NavLink to="/products" onClick={closeMenu}>Products</NavLink>
+          {user ? (
+            <>
+              <NavLink to="/orders" onClick={closeMenu}>Orders</NavLink>
+              <NavLink to="/wishlist" onClick={closeMenu}>Wishlist</NavLink>
+              <NavLink to="/profile" onClick={closeMenu}>Profile</NavLink>
+              <NavLink to="/address-book" onClick={closeMenu}>Address Book</NavLink>
+              {user.isAdmin ? (
+                <NavLink to="/admin" onClick={closeMenu}>Admin Panel</NavLink>
+              ) : null}
+              <button type="button" className="nav-button" onClick={handleLogout}>
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink to="/login" onClick={closeMenu}>Login</NavLink>
+              <NavLink to="/register" onClick={closeMenu}>Register</NavLink>
             </>
           )}
         </nav>

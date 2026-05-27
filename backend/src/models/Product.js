@@ -65,6 +65,17 @@ const productSchema = new mongoose.Schema(
       enum: ["Unisex", "Women", "Men"],
       default: "Unisex",
     },
+    images: {
+      type: [String],
+      default: [],
+    },
+    variants: [
+      {
+        label: { type: String, required: true },
+        value: { type: String, required: true },
+        inStock: { type: Boolean, default: true },
+      },
+    ],
   },
   {
     timestamps: true,

@@ -9,6 +9,8 @@ import {
   toggleAdminRole,
   toggleUserActive,
   updateOrderStatus,
+  getAllReviews,
+  deleteReviewAdmin,
 } from "../controllers/adminController.js";
 import { adminOnly, protect } from "../middleware/authMiddleware.js";
 
@@ -24,5 +26,7 @@ router.patch("/users/:userId/role", toggleAdminRole);
 router.patch("/users/:userId/active", toggleUserActive);
 router.get("/orders", getAllOrders);
 router.patch("/orders/:orderId/status", updateOrderStatus);
+router.get("/reviews", getAllReviews);
+router.delete("/reviews/:reviewId", deleteReviewAdmin);
 
 export default router;

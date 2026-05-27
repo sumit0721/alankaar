@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
+import Review from "../models/Review.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/apiError.js";
 
@@ -353,5 +354,78 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     data: updated,
+  });
+});
+
+// ============================================
+// REVIEWS (ADMIN)
+// ============================================
+
+export const getAllReviews = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+
+  const [reviews, total] = await Promise.all([
+    Review.find()
+      .populate("user", "name email profilePicture")
+      .populate("product", "name image category")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Review.countDocuments(),
+  ]);
+
+  res.status(200).json({
+    success: true,
+    count: reviews.length,
+    page,
+    pages: Math.max(Math.ceil(total / limit), 1),
+    total,
+    data: reviews,
+  });
+});
+
+export const deleteReviewAdmin = asyncHandler(async (req, res) => {
+  const { reviewId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(reviewId)) {
+    throw new ApiError(400, "Invalid review id.");
+  }
+
+  const review = await Review.findById(reviewId);
+
+  if (!review) {
+    throw new ApiError(404, "Review not found.");
+  }
+
+  const productId = review.product;
+  await review.deleteOne();
+
+  // Recalculate product rating
+  const stats = await Review.aggregate([
+    { $match: { product: new mongoose.Types.ObjectId(productId) } },
+    {
+      $group: {
+        _id: "$product",
+        avgRating: { $avg: "$rating" },
+        numReviews: { $sum: 1 },
+      },
+    },
+  ]);
+
+  if (stats.length > 0) {
+    await Product.findByIdAndUpdate(productId, {
+      rating: Math.round(stats[0].avgRating * 10) / 10,
+      numReviews: stats[0].numReviews,
+    });
+  } else {
+    await Product.findByIdAndUpdate(productId, {
+      rating: 0,
+      numReviews: 0,
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Review deleted successfully.",
   });
 });
