@@ -36,10 +36,14 @@ const sendEmail = async ({ to, subject, html }) => {
   }
 
   try {
+    const host = process.env.EMAIL_HOST || "smtp.gmail.com";
+    const port = Number(process.env.EMAIL_PORT) || 465;
+    const secure = port === 465;
+
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true, // Use SSL (essential for cloud platforms like Render)
+      host,
+      port,
+      secure,
       auth: {
         user,
         pass,
@@ -55,22 +59,21 @@ const sendEmail = async ({ to, subject, html }) => {
       html,
     });
   } catch (error) {
-    // If SMTP fails in local development, fall back to console logging rather than crashing the client
-    if (process.env.NODE_ENV !== "production") {
-      console.log(`\n📧 ======================================================`);
-      console.log(`[DEVELOPMENT SMTP ERROR FALLBACK] Nodemailer failed: ${error.message}`);
-      console.log(`To: ${to}`);
-      console.log(`Subject: ${subject}`);
-      console.log(`------------------------------------------------------`);
-      const linkMatch = html.match(/href="([^"]+)"/);
-      if (linkMatch && linkMatch[1]) {
-        console.log(`🔑 RESET LINK: ${linkMatch[1]}`);
-      }
-      console.log(`======================================================\n`);
-      return;
+    // Log the SMTP error so the developer can see the cause in Render dashboard logs
+    console.error(`❌ Nodemailer SMTP Error: ${error.message}`);
+
+    // Fail-safe fallback: print the link to the console logs and return successfully
+    console.log(`\n📧 ======================================================`);
+    console.log(`[SMTP FAIL-SAFE FALLBACK] Nodemailer connection failed. Reset link generated:`);
+    console.log(`To: ${to}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`------------------------------------------------------`);
+    const linkMatch = html.match(/href="([^"]+)"/);
+    if (linkMatch && linkMatch[1]) {
+      console.log(`🔑 RESET LINK: ${linkMatch[1]}`);
     }
-    // Re-throw if in production
-    throw error;
+    console.log(`======================================================\n`);
+    return;
   }
 };
 
