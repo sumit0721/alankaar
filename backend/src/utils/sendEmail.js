@@ -37,11 +37,15 @@ const sendEmail = async ({ to, subject, html }) => {
 
   try {
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true, // Use SSL (essential for cloud platforms like Render)
       auth: {
         user,
         pass,
       },
+      connectionTimeout: 10000, // 10 seconds timeout
+      socketTimeout: 10000,
     });
 
     await transporter.sendMail({
