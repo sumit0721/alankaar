@@ -48,7 +48,7 @@ function ForgotPasswordPage() {
           {sent ? (
             <div className="forgot-success">
               <p className="status-message success-message">
-                If that email is registered, a reset link has been sent. Please check your inbox.
+                A secure password reset link has been successfully sent to your email inbox. Please check your inbox.
               </p>
               <Link to="/login" className="primary-button" style={{ marginTop: "1rem" }}>
                 Back to Login

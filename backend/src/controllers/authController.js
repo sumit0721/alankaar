@@ -84,12 +84,8 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ email: email.toLowerCase() });
 
-  // Always return generic success to prevent email enumeration
   if (!user) {
-    return res.status(200).json({
-      success: true,
-      message: "If that email is registered, a reset link has been sent.",
-    });
+    throw new ApiError(400, "This email is not registered on Alankaar. Please register first.");
   }
 
   // Generate reset token
@@ -120,12 +116,12 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
-    throw new ApiError(500, "Failed to send reset email. Please try again later.");
+    throw new ApiError(500, `Failed to send reset email: ${emailError.message}`);
   }
 
   res.status(200).json({
     success: true,
-    message: "If that email is registered, a reset link has been sent.",
+    message: "A password reset link has been sent to your email.",
   });
 });
 
