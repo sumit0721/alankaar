@@ -1,32 +1,38 @@
-import nodemailer from "nodemailer";
+/**
+ * sendEmail.js — Brevo HTTP Transactional Email API
+ *
+ * WHY HTTP instead of SMTP?
+ * Cloud platforms like Render block outbound SMTP ports (587, 465) to prevent
+ * spam. The Brevo HTTP API uses HTTPS (port 443), which is never blocked.
+ *
+ * Required env vars:
+ *   BREVO_API_KEY  — your Brevo v3 API key (starts with "xkeysib-")
+ *   EMAIL_USER     — the verified sender email on Brevo (e.g. sumitandjha1217@gmail.com)
+ */
 
 const sendEmail = async ({ to, subject, html }) => {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.EMAIL_USER;
 
-  const isPlaceholder = (val) => {
+  // ---------- Development fallback when credentials are missing ----------
+  const isMissing = (val) => {
     if (!val) return true;
     const lower = val.toLowerCase();
     return (
-      lower.includes("your-gmail") ||
-      lower.includes("your_gmail") ||
-      lower.includes("your-gmail-app-password") ||
-      lower.includes("your-email") ||
-      lower.includes("your_email") ||
+      lower.includes("your-") ||
+      lower.includes("your_") ||
       lower.includes("replace_with_") ||
       lower.startsWith("your_") ||
       lower.startsWith("your-")
     );
   };
 
-  // Development SMTP fallback when credentials are missing or placeholders
-  if (isPlaceholder(user) || isPlaceholder(pass)) {
+  if (isMissing(apiKey) || isMissing(senderEmail)) {
     console.log(`\n📧 ======================================================`);
-    console.log(`[DEVELOPMENT SMTP FALLBACK] Password Reset Link`);
+    console.log(`[DEV FALLBACK] Email credentials not configured.`);
     console.log(`To: ${to}`);
     console.log(`Subject: ${subject}`);
     console.log(`------------------------------------------------------`);
-    // Extract reset link from html using simple regex match
     const linkMatch = html.match(/href="([^"]+)"/);
     if (linkMatch && linkMatch[1]) {
       console.log(`🔑 RESET LINK: ${linkMatch[1]}`);
@@ -35,50 +41,35 @@ const sendEmail = async ({ to, subject, html }) => {
     return;
   }
 
+  // ---------- Send via Brevo HTTP API (works on Render, Vercel, etc.) ----------
   try {
-    const host = process.env.EMAIL_HOST || "smtp.gmail.com";
-    const port = Number(process.env.EMAIL_PORT) || 465;
-    const secure = port === 465;
-
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure,
-      auth: {
-        user,
-        pass,
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        "api-key": apiKey,
       },
-      connectionTimeout: 10000, // 10 seconds timeout
-      socketTimeout: 10000,
+      body: JSON.stringify({
+        sender: { name: "ALANKAAR", email: senderEmail },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      }),
     });
 
-    await transporter.sendMail({
-      from: `"ALANKAAR" <${user}>`,
-      to,
-      subject,
-      html,
-    });
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(
+        `Brevo API ${response.status}: ${errorBody}`
+      );
+    }
+
+    const result = await response.json();
+    console.log(`✅ Email sent via Brevo HTTP API. MessageId: ${result.messageId}`);
   } catch (error) {
-    // Log the SMTP error so the developer can see the cause in Render dashboard logs
-    console.error(`❌ Nodemailer SMTP Error: ${error.message}`);
-
-    // In production, throw the error so that the API call fails and notifies the client
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    // Fail-safe fallback in development: print the link to the console logs and return successfully
-    console.log(`\n📧 ======================================================`);
-    console.log(`[SMTP DEVELOPMENT FALLBACK] Nodemailer connection failed. Reset link generated:`);
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`------------------------------------------------------`);
-    const linkMatch = html.match(/href="([^"]+)"/);
-    if (linkMatch && linkMatch[1]) {
-      console.log(`🔑 RESET LINK: ${linkMatch[1]}`);
-    }
-    console.log(`======================================================\n`);
-    return;
+    console.error(`❌ Brevo HTTP API Error: ${error.message}`);
+    throw error; // Let the controller handle the error and return 500 to the client
   }
 };
 
