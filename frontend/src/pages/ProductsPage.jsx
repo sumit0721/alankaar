@@ -144,8 +144,8 @@ function ProductsPage() {
     });
   }
 
-  // Sidebar Filtering form component (rendered on both desktop and mobile drawer)
-  const FilterSidebarContent = () => (
+  // Sidebar Filtering form function (rendered on both desktop and mobile drawer)
+  const renderFilterSidebar = () => (
     <div className="filter-sidebar-card">
       {/* Category filters */}
       <div className="filter-section">
@@ -310,7 +310,7 @@ function ProductsPage() {
         <div className="products-layout-grid">
           {/* Left Sidebar column (Desktop only) */}
           <aside className="products-sidebar-desktop">
-            <FilterSidebarContent />
+            {renderFilterSidebar()}
           </aside>
 
           {/* Right Product Grid column */}
@@ -386,7 +386,7 @@ function ProductsPage() {
                   <option value="priceDesc">Price: High to Low</option>
                 </select>
               </div>
-              <FilterSidebarContent />
+              {renderFilterSidebar()}
             </div>
             <div className="filter-drawer-footer">
               <button

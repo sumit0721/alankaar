@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 import connectDB from "../config/db.js";
 import Product from "../models/Product.js";
 import sampleProducts from "./sampleProducts.js";
@@ -13,7 +14,7 @@ const clearAndSeed = async () => {
     console.log("Clearing all products from database...");
     const deleteResult = await Product.deleteMany({});
     console.log(`Deleted ${deleteResult.deletedCount} products`);
-    
+
     console.log("Inserting fresh products...");
     await Product.insertMany(sampleProducts);
     console.log(`Successfully inserted ${sampleProducts.length} products`);

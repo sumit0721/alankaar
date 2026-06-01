@@ -61,11 +61,20 @@ export const addReview = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Rating must be between 1 and 5.");
   }
 
-  // Check if user has a delivered order containing this product
+  // Check if product exists
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new ApiError(404, "Product not found.");
+  }
+
+  // Check if user has a delivered order containing this product (by ID or exact name)
   const hasDeliveredOrder = await Order.findOne({
     user: req.user._id,
     isDelivered: true,
-    "orderItems.product": productId,
+    $or: [
+      { "orderItems.product": productId },
+      { "orderItems.name": product.name },
+    ],
   });
 
   if (!hasDeliveredOrder) {
@@ -102,10 +111,18 @@ export const checkReviewEligibility = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid product id.");
   }
 
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new ApiError(404, "Product not found.");
+  }
+
   const hasDeliveredOrder = await Order.findOne({
     user: req.user._id,
     isDelivered: true,
-    "orderItems.product": productId,
+    $or: [
+      { "orderItems.product": productId },
+      { "orderItems.name": product.name },
+    ],
   });
 
   const alreadyReviewed = await Review.findOne({

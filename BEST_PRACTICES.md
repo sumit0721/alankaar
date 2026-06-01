@@ -610,3 +610,16 @@ Before deploying to production:
 ---
 
 **Remember: Good code is not just code that works, it's code that others can understand and maintain!**
+
+---
+
+## **DATABASE INTEGRITY & USER PRIVACY BOUNDARIES**
+
+### **🔒 STRICT RULE: No Manual Seeding of User/Transaction History**
+
+To ensure absolute compliance with **User Privacy, Auditing, Security, and System Integrity**, the following boundaries are strictly enforced:
+
+1. **No Synthetic Mock Transactional Data:** Under no circumstances should order histories (`orders`), customer feedback/reviews (`reviews`), wishlists, or personal addresses (`savedAddresses`) be manually seeded, injected, or modified in the database for mock data purposes.
+2. **Organic Data Flow Only:** All transactional and behavioral records in the database must originate exclusively from actual front-end user interactions (users adding items to cart, authenticating, checking out via the payment gateway, and submitting reviews).
+3. **Auditing and Privacy Compliance:** Manual database alteration of user profiles or order logs violates security audit protocols. All user data, active sessions, and checkouts must be handled through protected secure routes only.
+

@@ -165,7 +165,7 @@ function ProductReviews({ productId }) {
       {loading ? (
         <p>Loading reviews...</p>
       ) : reviews.length === 0 ? (
-        <p className="reviews-empty">No reviews yet. Be the first to review!</p>
+        <p className="reviews-empty">No reviews yet.</p>
       ) : (
         <div className="reviews-list">
           {reviews.map((review) => (

@@ -22,7 +22,10 @@ export const getProducts = asyncHandler(async (req, res) => {
 
   // Skin Type suitability filter
   if (req.query.skinType && req.query.skinType !== "All") {
-    query.skinType = { $regex: req.query.skinType, $options: "i" };
+    query.$or = [
+      { skinType: { $regex: req.query.skinType, $options: "i" } },
+      { skinType: { $regex: "all", $options: "i" } }
+    ];
   }
 
   // Price range filters

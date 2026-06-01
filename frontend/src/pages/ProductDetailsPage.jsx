@@ -55,6 +55,28 @@ function ProductDetailsPage() {
         const updated = [productId, ...viewed.filter((id) => id !== productId)].slice(0, 10);
         localStorage.setItem("recentlyViewed", JSON.stringify(updated));
       } catch (requestError) {
+        // Fallback: search for product by name if ID was deleted due to db reseed
+        const searchParams = new URLSearchParams(location.search);
+        const productName = searchParams.get("name");
+        
+        if (productName) {
+          try {
+            const searchResponse = await getProducts({ keyword: productName });
+            const matchingProduct = searchResponse.data.data.find(
+              (p) => p.name.toLowerCase() === productName.toLowerCase()
+            ) || searchResponse.data.data[0];
+            
+            if (matchingProduct) {
+              const writeReview = searchParams.get("writeReview");
+              const nextQuery = writeReview ? "?writeReview=true" : "";
+              navigate(`/products/${matchingProduct._id}${nextQuery}`, { replace: true });
+              return;
+            }
+          } catch (searchError) {
+            console.error("Failed to find product by name:", searchError);
+          }
+        }
+
         setError(
           requestError.response?.data?.message || "Unable to load this product right now."
         );
@@ -64,7 +86,7 @@ function ProductDetailsPage() {
     };
 
     loadProduct();
-  }, [productId]);
+  }, [productId, location.search]);
 
   // Load related products
   useEffect(() => {
