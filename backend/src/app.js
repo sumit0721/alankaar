@@ -12,6 +12,7 @@ import orderRoutes from "./routes/orderRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import newsletterRoutes from "./routes/newsletterRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 
 const app = express();
@@ -108,6 +109,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/newsletter", newsletterRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // ============================================
 // ERROR HANDLING

@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useCart } from "../../context/CartContext.jsx";
+import NotificationBell from "./NotificationBell.jsx";
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -36,6 +37,7 @@ function Navbar() {
             <>
               <NavLink to="/orders">Orders</NavLink>
               <NavLink to="/wishlist">Wishlist</NavLink>
+              {user && <NotificationBell />}
               <NavLink to="/profile">Profile</NavLink>
               {user.isAdmin ? (
                 <NavLink to="/admin">Admin</NavLink>
@@ -82,6 +84,11 @@ function Navbar() {
             <>
               <NavLink to="/orders" onClick={closeMenu}>Orders</NavLink>
               <NavLink to="/wishlist" onClick={closeMenu}>Wishlist</NavLink>
+              {user && (
+                <div style={{ padding: "0.75rem 0.5rem" }}>
+                  <NotificationBell />
+                </div>
+              )}
               <NavLink to="/profile" onClick={closeMenu}>Profile</NavLink>
               <NavLink to="/address-book" onClick={closeMenu}>Address Book</NavLink>
               {user.isAdmin ? (

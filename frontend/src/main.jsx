@@ -7,6 +7,7 @@ import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import { WishlistProvider } from "./context/WishlistContext.jsx";
+import { NotificationProvider } from "./context/NotificationContext.jsx";
 import "./styles/variables.css";
 import "./styles/global.css";
 
@@ -16,20 +17,21 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <AuthProvider>
         <CartProvider>
           <WishlistProvider>
-            <Toaster
-              position="top-center"
-              toastOptions={{
-                duration: 3000,
-                style: {
-                  background: "#1a1a1a",
-                  color: "#fff",
-                  borderRadius: "12px",
-                  padding: "12px 20px",
-                  fontSize: "0.9rem",
-                },
-              }}
-            />
-            <App />
+            <NotificationProvider>
+              <App />
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  duration: 3000,
+                  style: {
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.92rem",
+                    maxWidth: "90vw",
+                    borderRadius: "12px",
+                  },
+                }}
+              />
+            </NotificationProvider>
           </WishlistProvider>
         </CartProvider>
       </AuthProvider>

@@ -6,6 +6,10 @@ import User from "../models/User.js";
 import Review from "../models/Review.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/apiError.js";
+import Notification from "../models/Notification.js";
+import sendEmail from "../utils/sendEmail.js";
+import { getStatusEmailContent } from "../utils/orderEmailTemplates.js";
+import { sendToUser } from "../utils/sseManager.js";
 
 const getPagination = (query) => {
   const page = Math.max(Number(query.page) || 1, 1);
@@ -322,38 +326,89 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
   const { status } = req.body;
 
-  if (!mongoose.Types.ObjectId.isValid(orderId)) {
-    throw new ApiError(400, "Invalid order id.");
-  }
-
-  const validStatuses = ["pending", "processing", "packed", "shipped", "delivered", "cancelled"];
+  const validStatuses = [
+    "pending", "processing", "packed",
+    "shipped", "delivered", "cancelled",
+  ];
 
   if (!validStatuses.includes(status)) {
     throw new ApiError(400, "Invalid status value.");
   }
 
-  const order = await Order.findById(orderId);
+  // Populate user to get their name and email for notification + email
+  const order = await Order.findById(orderId).populate("user", "name email");
 
-  if (!order) {
-    throw new ApiError(404, "Order not found.");
+  if (!order) throw new ApiError(404, "Order not found.");
+
+  // No-op if status is unchanged
+  if (order.orderStatus === status) {
+    return res.status(200).json({ success: true, data: order });
   }
 
+  // Update order fields
   order.orderStatus = status;
-
   if (status === "delivered") {
     order.isDelivered = true;
     order.deliveredAt = new Date();
   }
-
   if (status === "cancelled") {
     order.isCancelled = true;
   }
 
-  const updated = await order.save();
+  const updatedOrder = await order.save();
+
+  // Human-readable messages per status
+  const statusMessages = {
+    pending:    `Your order #${order._id.toString().slice(-6).toUpperCase()} is pending.`,
+    processing: `Your order #${order._id.toString().slice(-6).toUpperCase()} is now being processed.`,
+    packed:     `Your order #${order._id.toString().slice(-6).toUpperCase()} has been packed and is ready for pickup.`,
+    shipped:    `Your order #${order._id.toString().slice(-6).toUpperCase()} has been shipped and is on its way!`,
+    delivered:  `Your order #${order._id.toString().slice(-6).toUpperCase()} has been delivered. Enjoy your products!`,
+    cancelled:  `Your order #${order._id.toString().slice(-6).toUpperCase()} has been cancelled. Contact us if you have questions.`,
+  };
+
+  // Save in-app notification to MongoDB
+  const newNotification = await Notification.create({
+    user: order.user._id,
+    orderId: order._id,
+    orderShortId: order._id.toString().slice(-6).toUpperCase(),
+    message: statusMessages[status],
+    status,
+    isRead: false,
+  });
+
+  // Push to user instantly via SSE if they are currently online
+  // If offline, they will receive it via unread_batch when they log back in
+  sendToUser(order.user._id.toString(), {
+    type: "new_notification",
+    notification: newNotification,
+  });
+
+  // Send email for shipped, delivered, cancelled only
+  const emailStatuses = ["shipped", "delivered", "cancelled"];
+  if (emailStatuses.includes(status) && order.user?.email) {
+    try {
+      const emailContent = getStatusEmailContent(
+        status,
+        updatedOrder,
+        order.user.name
+      );
+      if (emailContent) {
+        await sendEmail({
+          to: order.user.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+        });
+      }
+    } catch (emailError) {
+      // Email failure must never block the status update response
+      console.error("Order status email failed:", emailError.message);
+    }
+  }
 
   res.status(200).json({
     success: true,
-    data: updated,
+    data: updatedOrder,
   });
 });
 
