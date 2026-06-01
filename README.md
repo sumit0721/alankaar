@@ -1,452 +1,159 @@
-# Cosmetic Brand MERN Website - Complete Project
+# ALANKAAR — E-Commerce Cosmetic Brand Website
 
-A production-ready, full-stack e-commerce website for a cosmetic brand built with MERN (MongoDB, Express, React, Node.js).
-
-## 📋 Project Overview
-
-This project demonstrates a complete MERN stack implementation with:
-
-- **Modern Frontend**: React 18 with React Router for navigation
-- **Robust Backend**: Express.js with middleware, error handling, and security
-- **Database**: MongoDB Atlas for data persistence
-- **Authentication**: JWT-based user authentication and authorization
-- **Payment Processing**: Razorpay integration for secure payments
-- **Responsive Design**: Mobile-first, fully responsive UI
-- **Production Ready**: Security, performance optimization, and error handling
+Alankaar is a premium, full-stack MERN (MongoDB, Express, React, Node.js) e-commerce platform crafted for a high-end beauty and cosmetics brand. Built using modern design systems, clean architectural principles, and native web technologies, the application delivers real-time notifications, unified account controls, and secure online shopping.
 
 ---
 
-## 🚀 Quick Start
+## ✨ Design & Visual Philosophy
 
-### **Prerequisites**
-- Node.js 18+ and npm 9+
-- MongoDB Atlas account (free tier available)
-- Razorpay account (sandbox for testing)
-- Git for version control
-
-### **Installation**
-
-**1. Clone Repository**
-```bash
-git clone your-repository-url
-cd alankaar-project
-```
-
-**2. Backend Setup**
-```bash
-cd backend
-npm install
-cp .env.example .env  # Update with your credentials
-npm run dev          # Development server on port 5000
-```
-
-**3. Frontend Setup (new terminal)**
-```bash
-cd frontend
-npm install
-npm run dev          # Development server on port 5173
-```
-
-**4. Access Application**
-- Frontend: http://localhost:5173
-- Backend: http://localhost:5000
-- API Health: http://localhost:5000/api/health
+Alankaar (meaning *ornament* or *decoration* in Sanskrit) features a warm, minimal, and premium aesthetic:
+* **Harmonious Palette**: Built on curated warm tones, including rich terracotta (`#be6a4a`), light peach (`#f8efe8`), and deep brown charcoal (`#2e211d`).
+* **Sleek Micro-Animations**: Interactive hover states with custom CSS scaling (`1.18x`) on navigation links, and glassmorphic surface cards designed to float cleanly on desktop and mobile viewports.
+* **Streamlined Iconography**: Grouped aesthetic navigation icons for standard user workflows:
+  * ❤️ **Wishlist**
+  * 👤 **Profile Avatar** (Custom vector SVG cutout that shifts terracotta shades on active hover)
+  * 🛠️ **Admin Panel**
+  * 🔔 **Live Notification Bell** (Houses a real-time event listener and unread count badge)
 
 ---
 
-## 🗂️ Project Structure
+## 🛠️ Features Summary
+
+### 1. Account & Profile Hub
+* **Unified Profile Panel**: Instead of scattered menus, a single centralized console houses **Profile Details** (name, phone, picture URL), **Change Password** inputs, and the **Address Book manager** nested cleanly as modular sub-cards.
+* **Address Book**: Add, update, set defaults, or delete multiple shipping addresses inline without leaving the profile.
+
+### 2. Live Notification System (SSE)
+* **Real-time Server-Sent Events**: Replaces legacy polling entirely with a single, persistent event-stream (`/api/notifications/stream`).
+* **Online Pushes**: Instantly pushes order status updates (e.g., from *Pending* to *Processing* or *Shipped*) directly to online clients as responsive React Hot Toasts.
+* **Offline Queues & Batch Delivery**: If a user is offline when their order status changes, updates are stored in MongoDB. When they log back in, the SSE stream automatically sends a batch of unread notifications to sync their bell.
+* **Resiliency**: Standardized 25-second heartbeat intervals to keep proxy connections alive on single-instance hosting platforms (like Render or Railway).
+
+### 3. Transactional Emails (Brevo HTTP API)
+* **Status Updates**: Automated HTML email triggers sent specifically for `shipped`, `delivered`, and `cancelled` statuses.
+* **Premium Brand Templates**: Rich HTML templates featuring order breakdowns, items pricing, tax/shipping details, and real-time transaction information colored dynamically according to status.
+* **HTTPS Port 443 Delivery**: Bypasses cloud platform SMTP port blocks by utilizing Brevo's HTTP JSON API.
+
+### 4. Checkout & Cart Flow
+* **Cart Sync**: Full local storage backup synchronized with MongoDB.
+* **Strict Shipping Validation**: Validates full shipping details during checkout. Displays instant React Hot Toast alerts alongside red error banners to warn users of missing fields.
+* **Razorpay Payment Gateway**: Integration with Razorpay (sandbox mode) verifying webhook payments securely.
+
+### 5. Admin Fulfillment Controls
+* **Interactive Fulfillment List**: Central dashboard to review order structures, customer metrics, and export data.
+* **Fulfillment Lifecycle**: Interactive state changes (`Pending` → `Processing` → `Packed` → `Shipped` → `Delivered` → `Cancelled`) that immediately trigger the SSE push and transactional emails.
+
+---
+
+## 🏗️ Project Structure
 
 ```
-├── backend/                    # Node.js/Express API
+├── backend/                    # Node.js/Express API Service
 │   ├── src/
-│   │   ├── app.js            # Express app configuration
-│   │   ├── server.js         # Server entry point
-│   │   ├── config/           # Database configuration
-│   │   ├── controllers/      # Request handlers
-│   │   ├── models/           # MongoDB schemas
-│   │   ├── routes/           # API routes
-│   │   ├── middleware/       # Custom middleware
-│   │   ├── utils/            # Helper functions
-│   │   └── seed/             # Database seeding
-│   ├── .env                  # Environment variables (not in repo)
-│   ├── .env.example          # Template for env variables
-│   ├── .env.production       # Production env template
-│   └── package.json          # Dependencies
+│   │   ├── app.js            # Express app middleware & routing setup
+│   │   ├── server.js         # Port listening & DB connection initiator
+│   │   ├── config/           # Database setup
+│   │   ├── controllers/      # Route controllers (SSE, Auth, Admin, Orders)
+│   │   ├── models/           # Mongoose Schemas (User, Order, Product, Notification)
+│   │   ├── routes/           # Express routes
+│   │   ├── middleware/       # JWT Auth verification, admin-only barriers
+│   │   ├── utils/            # SSE Manager, Brevo helpers, email templates
+│   │   └── seed/             # Catalog seeding
+│   ├── .env.example          # Environment configuration defaults
+│   └── package.json          # Server dependencies
 │
-├── frontend/                 # React SPA
+├── frontend/                 # React 18 / Vite SPA
 │   ├── src/
-│   │   ├── main.jsx         # React entry point
-│   │   ├── App.jsx          # Root component with routing
-│   │   ├── components/      # Reusable UI components
-│   │   ├── pages/           # Page components
-│   │   ├── services/        # API service layer
-│   │   ├── context/         # React Context (Auth, Cart)
-│   │   ├── styles/          # Global styles
-│   │   └── utils/           # Helper functions
-│   ├── index.html           # HTML entry point
-│   ├── vite.config.js       # Vite configuration
-│   ├── .env.example         # Template for env variables
-│   ├── .env.production      # Production env template
-│   └── package.json         # Dependencies
-│
-├── DEPLOYMENT.md            # Deployment guide (Step 10)
-└── README.md               # This file
+│   │   ├── main.jsx         # Entry point & provider injection
+│   │   ├── App.jsx          # Route mapping & layout wrapper
+│   │   ├── components/      # UI elements (Navbar, NotificationBell, Loaders)
+│   │   ├── pages/           # Pages (Profile, Products, Checkout, Orders)
+│   │   ├── services/        # Axios API handlers
+│   │   ├── context/         # Auth, Cart, and SSE Notification contexts
+│   │   └── styles/          # Variables & comprehensive global styling
+│   ├── index.html           # Root HTML
+│   ├── vite.config.js       # Vite build configurations
+│   └── package.json          # Frontend dependencies
 ```
 
 ---
 
-## 📚 Features Implemented
+## 🔑 Environment Configuration
 
-### **User Management**
-✅ User Registration with validation  
-✅ User Login with JWT authentication  
-✅ Protected routes and API endpoints  
-✅ User session persistence with localStorage  
+Create a `.env` file in the `backend/` directory based on `.env.example`:
 
-### **Products**
-✅ Product listing with filtering  
-✅ Product details page  
-✅ Product categories  
-✅ Search functionality  
-
-### **Shopping**
-✅ Add/remove items from cart  
-✅ Cart persistence with localStorage  
-✅ Quantity updates  
-✅ Real-time price calculations  
-
-### **Orders**
-✅ Checkout process  
-✅ Order creation with items and shipping  
-✅ Order history view  
-✅ Order details page  
-
-### **Payments**
-✅ Razorpay integration (sandbox mode)  
-✅ Payment verification  
-✅ Order status updates after payment  
-✅ Payment error handling  
-
-### **Security & Performance**
-✅ CORS configuration  
-✅ Rate limiting on auth endpoints  
-✅ Helmet security headers  
-✅ Input validation and sanitization  
-✅ Error handling and logging  
-✅ Password hashing with bcrypt  
-✅ JWT token-based authentication  
-
----
-
-## 🔧 Technology Stack
-
-### **Backend**
-- **Runtime**: Node.js 18+
-- **Framework**: Express.js 4.x
-- **Database**: MongoDB 5.0+
-- **Authentication**: JWT (jsonwebtoken)
-- **Password Hashing**: bcryptjs
-- **Security**: helmet, express-rate-limit
-- **Logging**: Morgan
-- **Payment**: Razorpay SDK
-- **ORM**: Mongoose
-
-### **Frontend**
-- **Framework**: React 18+
-- **Build Tool**: Vite 6+
-- **Routing**: React Router 7+
-- **HTTP Client**: Axios
-- **State Management**: React Context API
-- **Styling**: CSS3
-
-### **Database**
-- **Cloud Database**: MongoDB Atlas
-- **Collections**: Users, Products, Orders, Carts
-
----
-
-## 🔑 Environment Variables
-
-### **Backend (.env)**
 ```env
 PORT=5000
 NODE_ENV=development
 MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret_key
+JWT_SECRET=your_long_secure_jwt_token_secret
 CLIENT_URL=http://localhost:5173
 RAZORPAY_KEY_ID=your_razorpay_key_id
-RAZORPAY_KEY_SECRET=your_razorpay_secret
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+
+# Brevo Settings
+BREVO_API_KEY=your_brevo_v3_api_key_starts_with_xkeysib
+EMAIL_USER=your_verified_sender_email@domain.com
+EMAIL_FROM=your_verified_sender_email@domain.com
 ```
 
-### **Frontend (.env)**
+Create a `.env` file in the `frontend/` directory:
+
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
 ---
 
-## 📖 API Endpoints
+## 🚀 Running the Project
 
-### **Authentication**
-```
-POST   /api/auth/register      - Register new user
-POST   /api/auth/login         - User login
-GET    /api/auth/me            - Get current user (protected)
-```
+### Development Startup
 
-### **Products**
-```
-GET    /api/products           - Get all products
-GET    /api/products/:id       - Get product details
-```
-
-### **Cart**
-```
-GET    /api/cart               - Get user's cart (protected)
-POST   /api/cart               - Add item to cart (protected)
-PUT    /api/cart/:itemId       - Update cart item (protected)
-DELETE /api/cart/:itemId       - Remove cart item (protected)
-```
-
-### **Orders**
-```
-POST   /api/orders             - Create new order (protected)
-GET    /api/orders             - Get user's orders (protected)
-GET    /api/orders/:id         - Get order details (protected)
-```
-
-### **Payments**
-```
-POST   /api/payments/razorpay/order   - Create Razorpay order (protected)
-POST   /api/payments/razorpay/verify  - Verify payment (protected)
-```
-
----
-
-## 🧪 Testing the Application
-
-### **Test User Flow**
-
-**1. Register New User**
-```
-Navigate to /register
-Email: test@example.com
-Password: Password123
-```
-
-**2. Login**
-```
-Navigate to /login
-Email: test@example.com
-Password: Password123
-```
-
-**3. Browse Products**
-```
-Go to /products
-Click on any product for details
-```
-
-**4. Add to Cart**
-```
-On product details page
-Click "Add to Cart"
-Go to /cart to view items
-```
-
-**5. Checkout**
-```
-From cart page
-Click "Proceed to Checkout"
-Fill shipping details
-Select payment method
-```
-
-**6. Payment (Sandbox)**
-```
-Use Razorpay test credentials
-Test card: 4111 1111 1111 1111
-Expiry: Any future date
-CVV: Any 3 digits
-```
-
----
-
-## 🐛 Troubleshooting
-
-### **Backend Issues**
-
-**Port 5000 already in use**
+**1. Start Backend Server:**
 ```bash
-# Find and kill process
-netstat -ano | findstr :5000
-taskkill /PID <PID> /F
+cd backend
+npm install
+npm run dev
 ```
 
-**MongoDB connection fails**
-```
-Check MONGODB_URI in .env
-Verify MongoDB Atlas IP whitelist
-Ensure database user credentials are correct
-```
-
-**API returns 500 error**
-```
-Check backend logs
-Verify environment variables are set
-Check database connection
+**2. Start Frontend Dev Client:**
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
-### **Frontend Issues**
-
-**API requests return 404**
-```
-Verify VITE_API_URL environment variable
-Check backend is running
-Verify API routes in backend
-```
-
-**CORS errors**
-```
-Check CORS configuration in backend/src/app.js
-Verify CLIENT_URL matches frontend domain
-Check Authorization header in requests
-```
+The frontend will run on [http://localhost:5173](http://localhost:5173) and request data from the backend running on [http://localhost:5000](http://localhost:5000).
 
 ---
 
-## 📈 Performance Optimization
+## ⚡ API Endpoint Catalog
 
-### **Frontend Optimizations**
-- ✅ Code splitting with Vite
-- ✅ Lazy loading of routes
-- ✅ Minified production builds
-- ✅ CSS module optimization
-- ✅ Image optimization recommendations
+### 👤 Authentication & Profiles
+* `POST /api/auth/register` - Create user account
+* `POST /api/auth/login` - User login (returns JWT)
+* `GET  /api/auth/me` - Get current session details
+* `PUT  /api/auth/profile` - Update profile data (name, phone, avatar)
+* `PUT  /api/auth/password` - Change password
 
-### **Backend Optimizations**
-- ✅ Express middleware optimization
-- ✅ MongoDB indexing
-- ✅ Payload size limits
-- ✅ Request compression
-- ✅ Caching strategies (implement as needed)
+### 📬 Real-time Notifications (SSE)
+* `GET  /api/notifications/stream` - Establishes EventSource channel (accepts JWT query parameter)
+* `GET  /api/notifications` - Fetch latest 20 notifications
+* `PUT  /api/notifications/:notificationId/read` - Mark single notification as read
+* `PUT  /api/notifications/read-all` - Mark all user notifications as read
 
-### **Database Optimization**
-- ✅ Proper indexing on frequently queried fields
-- ✅ Connection pooling (MongoDB Atlas)
-- ✅ Query optimization
-
----
-
-## 🔒 Security Checklist
-
-- ✅ Passwords hashed with bcrypt
-- ✅ JWT tokens for authentication
-- ✅ Rate limiting on auth endpoints
-- ✅ Helmet security headers
-- ✅ CORS properly configured
-- ✅ Input validation on all endpoints
-- ✅ Error messages don't leak sensitive info
-- ✅ Environment variables for secrets
-- ✅ HTTPS enforced in production
-- ✅ SQL injection prevention (using Mongoose)
+### 🛍️ Cart & Checkout Actions
+* `GET  /api/cart` - Retrieve current active cart
+* `POST /api/cart` - Push item to cart
+* `PUT  /api/cart/:itemId` - Update cart item quantity
+* `DELETE /api/cart/:itemId` - Delete item from cart
+* `POST /api/orders` - Place new order (calculates totals and updates catalog stocks)
 
 ---
 
-## 📝 Step-by-Step Development Process (Summary)
+## 🔒 Security & Performance Features
 
-This project was built following a structured approach:
-
-1. **Step 1**: Project planning and folder structure
-2. **Step 2**: Backend setup with Express
-3. **Step 3**: Frontend setup with React
-4. **Step 4**: API development (CRUD operations)
-5. **Step 5**: Frontend-Backend integration
-6. **Step 6**: Authentication implementation
-7. **Step 7**: UI component development
-8. **Step 8**: Cart and order management
-9. **Step 9**: Payment integration with Razorpay
-10. **Step 10**: Final polish, optimization, and deployment (this step)
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment guidelines.
-
----
-
-## 🚀 Deployment
-
-For comprehensive deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
-
-**Quick Deploy Options:**
-- Vercel (Frontend) + Heroku/Railway (Backend)
-- AWS S3 + CloudFront (Frontend) + EC2 (Backend)
-- Netlify (Frontend) + Firebase (Backend)
-
----
-
-## 📚 Learning Resources
-
-### **MERN Stack**
-- [React Documentation](https://react.dev)
-- [Express.js Guide](https://expressjs.com)
-- [MongoDB Documentation](https://docs.mongodb.com)
-- [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices)
-
-### **Security**
-- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [Helmet.js Documentation](https://helmetjs.github.io/)
-- [JWT Best Practices](https://tools.ietf.org/html/rfc8725)
-
-### **Performance**
-- [Web Vitals](https://web.dev/vitals/)
-- [Vite Documentation](https://vitejs.dev)
-- [MongoDB Performance](https://docs.mongodb.com/manual/administration/optimization/)
-
----
-
-## 📞 Support & Maintenance
-
-### **Regular Maintenance Tasks**
-- Update dependencies monthly
-- Review security logs weekly
-- Monitor error rates daily
-- Backup database regularly
-
-### **Scaling Considerations**
-- Implement caching (Redis)
-- Use CDN for static assets
-- Database replication for high availability
-- Load balancing for multiple servers
-
----
-
-## 📄 License
-
-MIT License - feel free to use this project for learning and commercial purposes.
-
----
-
-## 🎓 Key Learnings
-
-By completing this project, you've learned:
-
-✅ Full-stack web development with MERN  
-✅ RESTful API design and implementation  
-✅ Database design and MongoDB usage  
-✅ User authentication and authorization  
-✅ Payment processing integration  
-✅ Responsive web design  
-✅ Production deployment strategies  
-✅ Security best practices  
-✅ Error handling and logging  
-✅ Code organization and modular design  
-
----
-
-**Congratulations! You've built a production-ready cosmetic brand website! 🎉**
-
-Keep learning, keep building, and keep pushing your limits!
-
----
-
-*Last Updated: April 2026*  
-*Project Status: Production Ready ✅*
+* **Password Security**: Passwords are mathematically hashed with strong salt rounds via `bcryptjs` before storage.
+* **Token Guard Rails**: Secure endpoints require signed JSON Web Tokens (JWT) verified inside the `protect` middleware.
+* **HTTP Headers**: Enforces strict security layers using `helmet` to mitigate cross-site script execution.
+* **Connection Safety**: Zero mock user-transaction inject locks are enforced at the Mongoose abstraction layer to safeguard organic customer profiles and order histories.
