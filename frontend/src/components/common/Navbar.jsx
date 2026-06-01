@@ -36,12 +36,18 @@ function Navbar() {
           {user ? (
             <>
               <NavLink to="/orders">Orders</NavLink>
-              <NavLink to="/wishlist">Wishlist</NavLink>
-              {user && <NotificationBell />}
-              <NavLink to="/profile">Profile</NavLink>
+              <NavLink to="/wishlist" title="Wishlist" className="nav-icon-link">❤️</NavLink>
+              <NavLink to="/profile" title="Profile" className="nav-icon-link" style={{ color: "var(--color-accent)" }}>
+                <svg viewBox="0 0 32 32" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ verticalAlign: "middle" }}>
+                  <circle cx="16" cy="16" r="14" fill="currentColor" />
+                  <circle cx="16" cy="13" r="4.5" fill="#fff" />
+                  <path d="M7 26.5C7 21.8 11 18 16 18s9 3.8 9 8.5H7z" fill="#fff" />
+                </svg>
+              </NavLink>
               {user.isAdmin ? (
-                <NavLink to="/admin">Admin</NavLink>
+                <NavLink to="/admin" title="Admin Panel" className="nav-icon-link">🛠️</NavLink>
               ) : null}
+              {user && <NotificationBell />}
               <span className="nav-user">Hi, {user.name.split(" ")[0]}</span>
               <button type="button" className="nav-button" onClick={handleLogout}>
                 Logout
@@ -55,8 +61,9 @@ function Navbar() {
           )}
         </nav>
 
-        {/* Mobile: cart icon + hamburger */}
+        {/* Mobile: cart icon + bell + hamburger */}
         <div className="nav-mobile-right">
+          {user && <NotificationBell />}
           <Link to="/cart" className="mobile-cart-icon" onClick={closeMenu}>
             🛒
             {totalQuantity ? (
@@ -84,13 +91,7 @@ function Navbar() {
             <>
               <NavLink to="/orders" onClick={closeMenu}>Orders</NavLink>
               <NavLink to="/wishlist" onClick={closeMenu}>Wishlist</NavLink>
-              {user && (
-                <div style={{ padding: "0.75rem 0.5rem" }}>
-                  <NotificationBell />
-                </div>
-              )}
               <NavLink to="/profile" onClick={closeMenu}>Profile</NavLink>
-              <NavLink to="/address-book" onClick={closeMenu}>Address Book</NavLink>
               {user.isAdmin ? (
                 <NavLink to="/admin" onClick={closeMenu}>Admin Panel</NavLink>
               ) : null}

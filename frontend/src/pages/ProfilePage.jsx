@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 
 import { useAuth } from "../context/AuthContext.jsx";
 import { updateProfile, changePassword } from "../services/authService.js";
+import AddressBookPage from "./AddressBookPage.jsx";
 
 function ProfilePage() {
   const { user, updateUser } = useAuth();
@@ -183,6 +184,7 @@ function ProfilePage() {
             </form>
           </div>
         </div>
+        <AddressBookPage />
       </div>
     </section>
   );

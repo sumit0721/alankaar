@@ -18,7 +18,6 @@ import OrdersPage from "./pages/OrdersPage.jsx";
 import OrderDetailsPage from "./pages/OrderDetailsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import WishlistPage from "./pages/WishlistPage.jsx";
-import AddressBookPage from "./pages/AddressBookPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import AdminProductsPage from "./pages/admin/AdminProductsPage.jsx";
@@ -82,14 +81,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/address-book"
-            element={
-              <ProtectedRoute>
-                <AddressBookPage />
-              </ProtectedRoute>
-            }
-          />
+
           <Route
             path="/admin"
             element={

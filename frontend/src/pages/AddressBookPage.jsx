@@ -121,21 +121,18 @@ function AddressBookPage() {
 
   if (loading) {
     return (
-      <section className="section-block">
-        <div className="container">
-          <Loader />
-        </div>
-      </section>
+      <div className="profile-card" style={{ width: "100%", marginTop: "2rem", minHeight: "150px", display: "grid", placeItems: "center" }}>
+        <Loader />
+      </div>
     );
   }
 
   return (
-    <section className="section-block">
-      <div className="container">
-        <div className="section-heading">
-          <span className="eyebrow">Account</span>
-          <h1>Address Book</h1>
-        </div>
+    <div className="profile-card" style={{ width: "100%", marginTop: "2rem" }}>
+      <div className="section-heading" style={{ marginBottom: "1.5rem" }}>
+        <span className="eyebrow">Manage</span>
+        <h2>Address Book</h2>
+      </div>
 
         <button
           type="button"
@@ -246,8 +243,7 @@ function AddressBookPage() {
             ))}
           </div>
         )}
-      </div>
-    </section>
+    </div>
   );
 }
 

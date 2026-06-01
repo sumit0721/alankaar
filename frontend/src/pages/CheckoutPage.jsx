@@ -62,6 +62,7 @@ function CheckoutPage() {
     const hasMissingField = requiredFields.some((field) => !formData[field]?.trim?.() && field !== "paymentMethod");
 
     if (hasMissingField) {
+      toast.error("Please complete all shipping fields before placing the order.");
       setError("Please complete all shipping fields before placing the order.");
       return;
     }

@@ -3247,3 +3247,17 @@ button {
   }
   .notification-list { max-height: 60vh; }
 }
+
+/* Navbar Icon Links Style */
+.nav-icon-link {
+  font-size: 1.25rem !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-base);
+}
+
+.nav-icon-link:hover {
+  transform: scale(1.18);
+  color: var(--color-accent-dark);
+}
