@@ -2553,51 +2553,108 @@ button {
 @media (max-width: 768px) {
   .admin-shell {
     grid-template-columns: 1fr;
+    min-height: calc(100vh - 120px);
   }
 
   .admin-sidebar {
-    display: flex;
-    overflow-x: auto;
-    padding: 0.5rem;
+    display: block !important;
+    width: 100%;
+    padding: 0 !important;
+    background: var(--color-surface-dark);
+    border-bottom: 1px solid var(--color-border);
   }
 
   .admin-sidebar-brand,
   .admin-sidebar-profile {
-    display: none;
+    display: none !important;
   }
 
   .admin-sidebar-nav {
-    display: flex;
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    width: 100% !important;
+    padding: 0.6rem 0.5rem !important;
+    gap: 0.5rem !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .admin-sidebar-nav::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
   }
 
   .admin-sidebar-link {
-    padding: 0.6rem 1rem;
-    white-space: nowrap;
+    padding: 0.55rem 1rem !important;
+    font-size: 0.85rem !important;
+    border-radius: 999px !important;
     border-left: none !important;
-    border-bottom: 3px solid transparent;
+    border-bottom: none !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: rgba(255, 246, 241, 0.75) !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
   }
 
   .admin-sidebar-link.active {
-    border-bottom-color: var(--color-accent);
-    background: rgba(190, 106, 74, 0.15);
+    background: var(--color-accent) !important;
+    color: #fff !important;
   }
 
   .admin-main {
-    padding: 1.25rem;
+    padding: 1.25rem !important;
   }
 
+  .admin-header {
+    display: none !important;
+  }
+
+  /* Admin Dashboard Components */
   .admin-stat-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .admin-stat-card {
+    padding: 1rem !important;
+  }
+
+  .admin-stat-card .stat-value {
+    font-size: 1.4rem !important;
   }
 
   .admin-chart-grid,
   .admin-dashboard-grid,
   .admin-form-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  .admin-top-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  .admin-top-bar .primary-button {
+    width: 100% !important;
   }
 
   .admin-search {
-    width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .admin-filter-tabs {
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .admin-filter-tab {
+    white-space: nowrap;
   }
 }
 

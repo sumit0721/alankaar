@@ -186,10 +186,6 @@ function CheckoutPage() {
         <div className="checkout-form-panel">
           <span className="eyebrow">Checkout</span>
           <h1>Shipping and order review</h1>
-          <p className="products-subtitle">
-            In this step, the frontend sends shipping details and the selected payment method
-            to the backend, which creates the order from the items already stored in your cart.
-          </p>
 
           {cartError ? <p className="status-message error-message">{cartError}</p> : null}
           {error ? <p className="status-message error-message">{error}</p> : null}

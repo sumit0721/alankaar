@@ -77,7 +77,7 @@ export function CartProvider({ children }) {
       const response = await addCartItem({ productId, quantity });
       const nextState = normalizeCartState(response.data.data);
       setCartState(nextState);
-      toast.success("Added to cart!");
+      toast.success(`${product.name || "Item"} - added to cart`);
       return nextState;
     } catch (error) {
       const message = getErrorMessage(error, "Unable to add this item to your cart.");

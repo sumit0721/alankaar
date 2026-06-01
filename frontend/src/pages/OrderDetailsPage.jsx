@@ -66,8 +66,7 @@ function OrderDetailsPage() {
           <span className="eyebrow">Order Confirmed</span>
           <h1>Order #{order._id.slice(-6).toUpperCase()}</h1>
           <p className="products-subtitle">
-            The backend created this order from the items stored in your cart and then cleared
-            the cart automatically.
+            Thank you for shopping with us. Your order details and tracking status are shown below.
           </p>
 
           <div className="order-section">

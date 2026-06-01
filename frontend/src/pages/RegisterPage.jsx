@@ -79,19 +79,18 @@ function RegisterPage() {
           <span className="eyebrow">Join ALANKAAR</span>
           <h1>Create an account for a smoother cosmetic shopping flow.</h1>
           <p>
-            This registration page teaches an important full-stack idea: the frontend sends
-            form data to the backend, the backend creates the user, hashes the password, and
-            returns a JWT token.
+            Access exclusive collections, track your wishlist, and enjoy a seamless luxury 
+            shopping experience across all your devices.
           </p>
 
           <div className="auth-feature-list">
             <div>
-              <strong>Secure passwords</strong>
-              <span>Your backend hashes passwords with `bcryptjs` before saving them.</span>
+              <strong>Quick Checkout</strong>
+              <span>Save shipping preferences to complete orders seamlessly.</span>
             </div>
             <div>
-              <strong>Immediate login</strong>
-              <span>After register, the app stores the returned token and signs the user in.</span>
+              <strong>Curated Wishlist</strong>
+              <span>Keep track of products you love and want to try next.</span>
             </div>
           </div>
         </div>

@@ -73,18 +73,17 @@ function LoginPage() {
           <span className="eyebrow">Welcome Back</span>
           <h1>Sign in to continue your glow routine.</h1>
           <p>
-            Logging in gives customers a smoother checkout experience and keeps protected
-            routes like checkout secure through JWT authentication.
+            Log in to retrieve your saved cart, manage your profile, and complete your purchase seamlessly.
           </p>
 
           <div className="auth-feature-list">
             <div>
-              <strong>Protected checkout</strong>
-              <span>Only authenticated users can access private purchase steps.</span>
+              <strong>Personalized Experience</strong>
+              <span>Access your curated wishlist and tailored brand offers.</span>
             </div>
             <div>
-              <strong>Persistent session</strong>
-              <span>The stored token helps the app remember who is signed in.</span>
+              <strong>Seamless Checkout</strong>
+              <span>Retrieve your saved addresses and payment options instantly.</span>
             </div>
           </div>
         </div>

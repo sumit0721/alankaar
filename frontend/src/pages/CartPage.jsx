@@ -39,8 +39,7 @@ function CartPage() {
           <span className="eyebrow">Cart Access</span>
           <h1>Login to manage your cart and continue to checkout.</h1>
           <p>
-            In this version, cart data is stored in the backend for each authenticated user,
-            which is why login is required before adding items and placing orders.
+            Please log in to manage your bag, access saved items, and complete your purchase.
           </p>
 
           <div className="hero-actions">
@@ -62,8 +61,7 @@ function CartPage() {
         <div>
           <h1>Your Cart</h1>
           <p className="cart-note">
-            Your cart is now connected to the backend, so quantity changes and item removals
-            are stored for your signed-in account.
+            Review your selected beauty formulas and proceed to checkout.
           </p>
 
           {cartError ? <p className="status-message error-message">{cartError}</p> : null}

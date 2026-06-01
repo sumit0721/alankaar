@@ -47,14 +47,15 @@ function HomePage() {
       <section className="section-block testimonial-band">
         <div className="container testimonial-layout">
           <div>
-            <span className="eyebrow">Why It Works</span>
-            <h2>The current UI direction is built to feel editorial, not generic.</h2>
+            <span className="eyebrow">Our Heritage</span>
+            <h2>Crafted with pure luxury, made for mindful rituals.</h2>
           </div>
 
           <p>
-            We are using warm neutrals, rounded surfaces, product-forward cards, and more
-            intentional hierarchy so the website feels like a real cosmetic brand rather
-            than a plain starter template.
+            At ALANKAAR, we marry premium botanical extracts with cutting-edge skincare science. 
+            Every formulation is rich, ultra-concentrated, and free of harsh fillers, designed to offer an 
+            exquisite weightless feel and an editorial finish. Indulge in an elevated sensory journey 
+            that celebrates your natural luminance.
           </p>
         </div>
       </section>

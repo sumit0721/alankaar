@@ -45,7 +45,7 @@ function OrdersPage() {
           <span className="eyebrow">Orders</span>
           <h1>Your recent orders</h1>
           <p className="products-subtitle">
-            This page reads your order history from the backend using the logged-in JWT token.
+            View and track your current orders, past purchases, and routine restocks.
           </p>
         </div>
 

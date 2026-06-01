@@ -225,7 +225,6 @@ function ProductDetailsPage() {
 
                 try {
                   await addToCart(product);
-                  toast.success(`${product.name} added to cart!`);
                 } catch (cartError) {
                   toast.error(cartError.message);
                 }

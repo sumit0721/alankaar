@@ -67,13 +67,15 @@ function ProductCard({ product }) {
         {inWishlist ? "♥" : "♡"}
       </button>
 
-      <img
-        src={imgSrc}
-        alt={product.name}
-        className="product-image"
-        onError={handleImageError}
-        style={{ display: "block" }}
-      />
+      <Link to={`/products/${product._id}`} className="product-image-link" style={{ display: "block" }}>
+        <img
+          src={imgSrc}
+          alt={product.name}
+          className="product-image"
+          onError={handleImageError}
+          style={{ display: "block" }}
+        />
+      </Link>
 
       <div className="product-card-content">
         <h3>{product.name}</h3>
