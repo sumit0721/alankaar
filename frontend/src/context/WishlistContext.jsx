@@ -37,7 +37,7 @@ export function WishlistProvider({ children }) {
     };
 
     fetchWishlist();
-  }, [user]);
+  }, [user?._id]);
 
   const addToWishlist = async (productId) => {
     try {

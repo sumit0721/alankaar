@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import SkeletonCard from "../common/SkeletonCard.jsx";
 import ProductGrid from "../products/ProductGrid.jsx";
 import { getProducts } from "../../services/productService.js";
+import { buildCacheKey, readCache, writeCache } from "../../utils/productCache.js";
+
+const FEATURED_CACHE_KEY = buildCacheKey({ featured: "true" });
 
 function FeaturedProducts() {
   const [products, setProducts] = useState([]);
@@ -11,15 +14,27 @@ function FeaturedProducts() {
 
   useEffect(() => {
     const loadFeaturedProducts = async () => {
+      // ── Show cached data instantly if available ──────────────────────
+      const cached = readCache(FEATURED_CACHE_KEY);
+      if (cached) {
+        setProducts(cached);
+        setLoading(false);
+        // Continue to fetch fresh data in background (stale-while-revalidate)
+      }
+
       try {
-        setLoading(true);
         const response = await getProducts({ featured: true });
-        setProducts(response.data.data);
+        const freshData = response.data.data;
+        setProducts(freshData);
+        writeCache(FEATURED_CACHE_KEY, freshData);
       } catch (requestError) {
-        setError(
-          requestError.response?.data?.message ||
-            "Unable to load featured products right now."
-        );
+        // Only show error if we have no cached data to fall back on
+        if (!cached) {
+          setError(
+            requestError.response?.data?.message ||
+              "Unable to load featured products right now."
+          );
+        }
       } finally {
         setLoading(false);
       }
@@ -51,3 +66,4 @@ function FeaturedProducts() {
 }
 
 export default FeaturedProducts;
+

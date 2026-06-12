@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
@@ -8,8 +8,22 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import { WishlistProvider } from "./context/WishlistContext.jsx";
 import { NotificationProvider } from "./context/NotificationContext.jsx";
+import { initKeepAlive } from "./utils/keepAlive.js";
 import "./styles/variables.css";
 import "./styles/global.css";
+
+// Initializes the activity-gated keep-alive at the top level.
+// This component exists purely to call useEffect for the cleanup return value.
+function AppWithKeepAlive() {
+  useEffect(() => {
+    const cleanup = initKeepAlive();
+    return cleanup;
+  }, []);
+
+  return (
+    <App />
+  );
+}
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -18,7 +32,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <CartProvider>
           <WishlistProvider>
             <NotificationProvider>
-              <App />
+              <AppWithKeepAlive />
               <Toaster
                 position="top-center"
                 toastOptions={{
@@ -38,3 +52,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </BrowserRouter>
   </React.StrictMode>
 );
+

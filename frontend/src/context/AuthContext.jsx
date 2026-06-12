@@ -26,10 +26,28 @@ export function AuthProvider({ children }) {
           return;
         }
 
+        // ── Grace period check ───────────────────────────────────────────
+        // Only call /api/auth/me if the stored session is older than 10 minutes.
+        // On every page load/refresh, this eliminates the auth API call for
+        // active users, reducing the burst of simultaneous requests on startup
+        // (auth + cart + wishlist + SSE all fire at once after auth resolves).
+        const TEN_MINUTES = 10 * 60 * 1000;
+        const lastVerified = parsedUser._lastVerified || 0;
+        const isStale = Date.now() - lastVerified > TEN_MINUTES;
+
+        if (!isStale) {
+          // Session is fresh — use stored data directly, no API call
+          setUser(parsedUser);
+          setAuthLoading(false);
+          return;
+        }
+
+        // Session is stale or never verified — verify with backend
         const response = await getCurrentUser();
         const refreshedUser = {
           ...response.data.data,
           token: parsedUser.token,
+          _lastVerified: Date.now(),
         };
 
         setUser(refreshedUser);
@@ -46,8 +64,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const saveAuthUser = (userData) => {
-    setUser(userData);
-    localStorage.setItem("authUser", JSON.stringify(userData));
+    const withTimestamp = { ...userData, _lastVerified: Date.now() };
+    setUser(withTimestamp);
+    localStorage.setItem("authUser", JSON.stringify(withTimestamp));
   };
 
   const updateUser = (updatedData) => {

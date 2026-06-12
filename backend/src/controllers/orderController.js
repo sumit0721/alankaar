@@ -30,13 +30,24 @@ export const createOrder = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Cart is empty. Add items before placing an order.");
   }
 
-  for (const item of user.cartItems) {
-    const product = await Product.findById(item.product);
+  // ── Batch fetch all cart products in a single DB query ────────────
+  // Old code ran N individual Product.findById() calls in a for-loop.
+  // Now: 1 query regardless of cart size.
+  const productIds = user.cartItems.map((item) => item.product);
+  const products = await Product.find({ _id: { $in: productIds } });
 
+  // Build a lookup map: productId string → product document
+  const productMap = {};
+  products.forEach((p) => {
+    productMap[p._id.toString()] = p;
+  });
+
+  // Validate stock for every cart item
+  for (const item of user.cartItems) {
+    const product = productMap[item.product.toString()];
     if (!product) {
       throw new ApiError(404, `Product no longer exists: ${item.name}`);
     }
-
     if (product.countInStock < item.quantity) {
       throw new ApiError(400, `Not enough stock for ${item.name}.`);
     }
@@ -58,11 +69,16 @@ export const createOrder = asyncHandler(async (req, res) => {
     ...prices,
   });
 
-  for (const item of user.cartItems) {
-    const product = await Product.findById(item.product);
-    product.countInStock -= item.quantity;
-    await product.save();
-  }
+  // ── Batch decrement all stock in a single bulkWrite ───────────────
+  // Old code ran N individual findById() + save() calls in a for-loop.
+  // Now: 1 bulkWrite regardless of cart size.
+  const bulkOps = user.cartItems.map((item) => ({
+    updateOne: {
+      filter: { _id: item.product },
+      update: { $inc: { countInStock: -item.quantity } },
+    },
+  }));
+  await Product.bulkWrite(bulkOps);
 
   user.cartItems = [];
   await user.save();

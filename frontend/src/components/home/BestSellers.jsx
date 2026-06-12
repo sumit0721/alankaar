@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import ProductGrid from "../products/ProductGrid.jsx";
 import SkeletonCard from "../common/SkeletonCard.jsx";
 import { getProducts } from "../../services/productService.js";
+import { buildCacheKey, readCache, writeCache } from "../../utils/productCache.js";
+
+const BESTSELLERS_CACHE_KEY = buildCacheKey({ sort: "popular", _limit: "4" });
 
 function BestSellers() {
   const [products, setProducts] = useState([]);
@@ -10,12 +13,23 @@ function BestSellers() {
 
   useEffect(() => {
     const loadPopular = async () => {
+      // ── Show cached data instantly if available ──────────────────────
+      const cached = readCache(BESTSELLERS_CACHE_KEY);
+      if (cached) {
+        setProducts(cached);
+        setLoading(false);
+        // Continue to refresh in background
+      }
+
       try {
-        setLoading(true);
         const response = await getProducts({ sort: "popular" });
-        setProducts(response.data.data.slice(0, 4));
+        const freshData = response.data.data.slice(0, 4);
+        setProducts(freshData);
+        writeCache(BESTSELLERS_CACHE_KEY, freshData);
       } catch {
-        setProducts([]);
+        if (!cached) {
+          setProducts([]);
+        }
       } finally {
         setLoading(false);
       }
@@ -47,3 +61,4 @@ function BestSellers() {
 }
 
 export default BestSellers;
+

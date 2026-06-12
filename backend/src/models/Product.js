@@ -82,6 +82,17 @@ const productSchema = new mongoose.Schema(
   }
 );
 
+// ── Query performance indexes ──────────────────────────────────────────
+// These indexes prevent full collection scans on the most common queries.
+// They are created once by MongoDB when the app starts; no ongoing overhead.
+productSchema.index({ featured: 1 });           // Home page featured filter
+productSchema.index({ category: 1 });           // Category filter
+productSchema.index({ rating: -1 });            // Top-rated sort
+productSchema.index({ numReviews: -1 });        // Popular sort
+productSchema.index({ price: 1 });              // Price sort
+productSchema.index({ countInStock: 1 });       // Stock filter + low-stock admin view
+
 const Product = mongoose.model("Product", productSchema);
 
 export default Product;
+

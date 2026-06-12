@@ -21,6 +21,16 @@ const startServer = async () => {
       });
     });
 
+    // ─────────────────────────────────────────────
+    // Render / proxy keep-alive tuning
+    // Render's load balancer has a 75s idle timeout.
+    // Setting keepAliveTimeout slightly above it prevents
+    // the proxy from closing connections that Express still
+    // thinks are open, which would cause ECONNRESET errors.
+    // ─────────────────────────────────────────────
+    server.keepAliveTimeout = 90000; // 90 s (> Render's 75 s)
+    server.headersTimeout = 95000;   // must be > keepAliveTimeout
+
     // Graceful shutdown on SIGTERM
     process.on("SIGTERM", () => {
       logger.info("SIGTERM signal received: closing HTTP server");
@@ -39,23 +49,34 @@ const startServer = async () => {
       });
     });
 
-    // Handle uncaught exceptions
+    // ─────────────────────────────────────────────
+    // Uncaught synchronous exceptions — truly unrecoverable.
+    // Exit so Render can restart the process cleanly.
+    // ─────────────────────────────────────────────
     process.on("uncaughtException", (error) => {
-      logger.error("Uncaught Exception", {
+      logger.error("💥 Uncaught Exception — restarting server", {
         message: error.message,
         stack: error.stack,
       });
       process.exit(1);
     });
 
-    // Handle unhandled promise rejections
-    process.on("unhandledRejection", (reason, promise) => {
-      logger.error("Unhandled Rejection at:", {
-        promise,
-        reason,
+    // ─────────────────────────────────────────────
+    // Unhandled promise rejections — DO NOT exit.
+    // These are typically transient (email API timeout,
+    // Razorpay blip, MongoDB socket hiccup). Exiting here
+    // was the PRIMARY cause of the 2–4 minute downtime.
+    // Log it so we can diagnose, but keep the server alive.
+    // ─────────────────────────────────────────────
+    process.on("unhandledRejection", (reason) => {
+      logger.error("⚠️  Unhandled Promise Rejection — server continuing", {
+        reason: reason instanceof Error
+          ? { message: reason.message, stack: reason.stack }
+          : reason,
       });
-      process.exit(1);
+      // Do NOT call process.exit(1) here.
     });
+
   } catch (error) {
     logger.error("Failed to start server", {
       message: error.message,

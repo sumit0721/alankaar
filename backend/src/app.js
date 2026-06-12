@@ -82,18 +82,27 @@ const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
 app.use(morgan(morganFormat));
 
 // Body parsing middleware
-app.use(express.json({ limit: "50mb" })); // Limit payload to prevent abuse
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+// 1 MB is sufficient — all images are external URLs (strings), not file uploads.
+// 50 MB was a dangerous OOM risk on Render's 512 MB free-tier RAM.
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 // ============================================
 // HEALTH CHECK ENDPOINT
 // ============================================
 
 app.get("/api/health", (req, res) => {
+  const mem = process.memoryUsage();
   res.status(200).json({
     success: true,
     message: "Backend server is running",
     timestamp: new Date().toISOString(),
+    uptime: `${Math.floor(process.uptime())}s`,
+    memory: {
+      heapUsedMB: (mem.heapUsed / 1024 / 1024).toFixed(1),
+      heapTotalMB: (mem.heapTotal / 1024 / 1024).toFixed(1),
+      rssMB: (mem.rss / 1024 / 1024).toFixed(1),
+    },
   });
 });
 

@@ -24,7 +24,8 @@ export const sseConnect = asyncHandler(async (req, res) => {
       isRead: false,
     })
       .sort({ createdAt: -1 })
-      .limit(20);
+      .limit(20)
+      .lean();
 
     if (unread.length > 0) {
       res.write(
@@ -38,22 +39,25 @@ export const sseConnect = asyncHandler(async (req, res) => {
     console.error("SSE initial load error:", err.message);
   }
 
-  // Register this user's connection
-  addClient(userId, res);
-
-  // Heartbeat every 25 seconds to keep proxy connections alive
+  // ── Heartbeat every 25 seconds ─────────────────────────────────────
+  // Keeps proxy connections alive on Render/Railway.
+  // The interval ref is passed to addClient so the manager can
+  // clear it if the user reconnects (prevents orphaned intervals).
   const heartbeat = setInterval(() => {
     try {
       res.write(": heartbeat\n\n");
     } catch {
-      clearInterval(heartbeat);
+      // Write failed — connection is gone, clean up
       removeClient(userId);
     }
   }, 25000);
 
+  // Register client WITH heartbeat ref so manager can clean up on reconnect
+  addClient(userId, res, heartbeat);
+
   // Clean up when user closes browser tab or logs out
   req.on("close", () => {
-    clearInterval(heartbeat);
     removeClient(userId);
   });
 });
+

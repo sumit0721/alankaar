@@ -64,7 +64,7 @@ export function CartProvider({ children }) {
     }
 
     fetchCart();
-  }, [user, authLoading]);
+  }, [user?._id, authLoading]);
 
   const addToCart = async (product, quantity = 1) => {
     if (!user) {

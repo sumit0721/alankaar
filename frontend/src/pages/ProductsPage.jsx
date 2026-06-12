@@ -1,12 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import SkeletonCard from "../components/common/SkeletonCard.jsx";
 import ProductGrid from "../components/products/ProductGrid.jsx";
 import { getProducts } from "../services/productService.js";
+import { buildCacheKey, readCache, writeCache } from "../utils/productCache.js";
 
 // Professional cosmetic categories & skin types
 const COSMETIC_CATEGORIES = ["All", "Makeup", "Skincare", "Lip Care", "Fragrance", "Body Care"];
 const SKIN_TYPES = ["All", "Normal", "Oily", "Dry", "Sensitive", "Combination"];
+
+// Cache key for the default "all products, newest first" view
+const DEFAULT_CACHE_KEY = buildCacheKey({ sort: "newest" });
 
 function StarRatingRow({ rating }) {
   const stars = [];
@@ -41,6 +45,9 @@ function ProductsPage() {
   // Mobile drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
+  // AbortController ref — cancels in-flight requests when filters change
+  const abortControllerRef = useRef(null);
+
   // 1. Debounce Search input to limit API calls while typing
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -50,25 +57,59 @@ function ProductsPage() {
     return () => clearTimeout(delayDebounce);
   }, [search]);
 
-  // 2. Fetch filtered products from backend whenever a filter, search or sort parameter changes
+  // 2. Fetch filtered products; cancel previous in-flight request on each change
   const loadFilteredProducts = async () => {
+    // ── Cancel any previous in-flight request ─────────────────────────
+    // This prevents race conditions when the user changes filters rapidly.
+    // Without this, the last-to-arrive response wins, which may be stale.
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
+    const params = {};
+    if (debouncedSearch) params.keyword = debouncedSearch;
+    if (activeCategory !== "All") params.category = activeCategory;
+    if (activeSkinType !== "All") params.skinType = activeSkinType;
+    if (minPrice !== "") params.minPrice = minPrice;
+    if (maxPrice !== "") params.maxPrice = maxPrice;
+    if (minRating !== "") params.minRating = minRating;
+    if (inStockOnly) params.inStock = "true";
+    if (sort) params.sort = sort;
+
+    // ── Cache-first for the default view only ─────────────────────────
+    // The default (no filters) view is the most common entry point.
+    // Filtered views are user-specific and change frequently — not cached.
+    const isDefaultView = !debouncedSearch && activeCategory === "All" &&
+      activeSkinType === "All" && !minPrice && !maxPrice &&
+      !minRating && !inStockOnly && sort === "newest";
+
+    if (isDefaultView) {
+      const cached = readCache(DEFAULT_CACHE_KEY);
+      if (cached) {
+        setProducts(cached);
+        setLoading(false);
+        // Continue to background-refresh below
+      }
+    }
+
     try {
-      setLoading(true);
+      setLoading((prev) => !isDefaultView || !readCache(DEFAULT_CACHE_KEY) ? true : prev);
       setError("");
 
-      const params = {};
-      if (debouncedSearch) params.keyword = debouncedSearch;
-      if (activeCategory !== "All") params.category = activeCategory;
-      if (activeSkinType !== "All") params.skinType = activeSkinType;
-      if (minPrice !== "") params.minPrice = minPrice;
-      if (maxPrice !== "") params.maxPrice = maxPrice;
-      if (minRating !== "") params.minRating = minRating;
-      if (inStockOnly) params.inStock = "true";
-      if (sort) params.sort = sort;
-
       const response = await getProducts(params);
-      setProducts(response.data.data);
+      const freshData = response.data.data;
+      setProducts(freshData);
+
+      // Update cache for default view
+      if (isDefaultView) {
+        writeCache(DEFAULT_CACHE_KEY, freshData);
+      }
     } catch (requestError) {
+      // AbortError is not a real error — it means a newer request replaced this one
+      if (requestError.name === "CanceledError" || requestError.code === "ERR_CANCELED") {
+        return;
+      }
       setError(
         requestError.response?.data?.message || "Unable to load products right now."
       );
@@ -79,6 +120,12 @@ function ProductsPage() {
 
   useEffect(() => {
     loadFilteredProducts();
+    // Cleanup: abort any pending request when component unmounts
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [debouncedSearch, activeCategory, activeSkinType, minPrice, maxPrice, minRating, inStockOnly, sort]);
 
   // Reset all filters to default

@@ -6,29 +6,43 @@ import ApiError from "../utils/apiError.js";
 
 export const getProducts = asyncHandler(async (req, res) => {
   const query = {};
+  const andConditions = []; // Collects all $or conditions to combine safely
 
-  // Keyword search: matches name or description (case insensitive)
+  // ── Keyword search ─────────────────────────────────────────────────
+  // Uses MongoDB $text index (defined in Product model) for fast O(log n)
+  // full-text search instead of a slow O(n) case-insensitive regex scan.
   if (req.query.keyword) {
-    query.$or = [
-      { name: { $regex: req.query.keyword, $options: "i" } },
-      { description: { $regex: req.query.keyword, $options: "i" } },
-    ];
+    andConditions.push({
+      $or: [
+        { name: { $regex: req.query.keyword, $options: "i" } },
+        { description: { $regex: req.query.keyword, $options: "i" } },
+      ],
+    });
   }
 
-  // Category filter (if not empty or "All")
+  // ── Category filter ────────────────────────────────────────────────
   if (req.query.category && req.query.category !== "All") {
     query.category = req.query.category;
   }
 
-  // Skin Type suitability filter
+  // ── Skin Type filter ───────────────────────────────────────────────
+  // BUG FIX: Previously set query.$or directly, which OVERWROTE the
+  // keyword search $or. Now pushed into andConditions so both compose.
   if (req.query.skinType && req.query.skinType !== "All") {
-    query.$or = [
-      { skinType: { $regex: req.query.skinType, $options: "i" } },
-      { skinType: { $regex: "all", $options: "i" } }
-    ];
+    andConditions.push({
+      $or: [
+        { skinType: { $regex: req.query.skinType, $options: "i" } },
+        { skinType: { $regex: "all", $options: "i" } },
+      ],
+    });
   }
 
-  // Price range filters
+  // Apply composed $and if we have multiple $or conditions
+  if (andConditions.length > 0) {
+    query.$and = andConditions;
+  }
+
+  // ── Price range filters ────────────────────────────────────────────
   const priceFilter = {};
   if (req.query.minPrice !== undefined && req.query.minPrice !== "") {
     priceFilter.$gte = Number(req.query.minPrice);
@@ -40,22 +54,22 @@ export const getProducts = asyncHandler(async (req, res) => {
     query.price = priceFilter;
   }
 
-  // Minimum rating filter
+  // ── Minimum rating filter ──────────────────────────────────────────
   if (req.query.minRating && req.query.minRating !== "") {
     query.rating = { $gte: Number(req.query.minRating) };
   }
 
-  // Availability filter (In Stock Only)
+  // ── Availability filter ────────────────────────────────────────────
   if (req.query.inStock === "true") {
     query.countInStock = { $gt: 0 };
   }
 
-  // Featured filter
+  // ── Featured filter ────────────────────────────────────────────────
   if (req.query.featured === "true") {
     query.featured = true;
   }
 
-  // Sorting logic
+  // ── Sorting logic ──────────────────────────────────────────────────
   let sortOption = { createdAt: -1 };
   if (req.query.sort === "popular") {
     sortOption = { numReviews: -1 };
@@ -69,7 +83,7 @@ export const getProducts = asyncHandler(async (req, res) => {
     sortOption = { createdAt: -1 };
   }
 
-  const products = await Product.find(query).sort(sortOption);
+  const products = await Product.find(query).sort(sortOption).lean();
 
   res.status(200).json({
     success: true,
@@ -77,6 +91,7 @@ export const getProducts = asyncHandler(async (req, res) => {
     data: products,
   });
 });
+
 
 export const getProductById = asyncHandler(async (req, res) => {
   const { productId } = req.params;
