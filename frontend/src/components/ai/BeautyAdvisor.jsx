@@ -88,7 +88,7 @@ function BeautyAdvisor() {
       >
         {isOpen ? "✕" : "✨"}
         {!isOpen && (
-          <span className="beauty-advisor-fab-label">Beauty Advisor</span>
+          <span className="beauty-advisor-fab-label">AI Beauty Advisor</span>
         )}
       </button>
 
