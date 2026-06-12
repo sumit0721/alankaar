@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getFallbackImage } from "../../utils/fallbackImages.js";
+import { generateDescription } from "../../services/aiService.js";
 
 const CATEGORY_GROUPS = [
   {
@@ -81,6 +82,8 @@ const emptyForm = {
 function AdminProductForm({ initialProduct, submitLabel, onSubmit, loading }) {
   const [formData, setFormData] = useState(emptyForm);
   const [validationError, setValidationError] = useState("");
+  const [generatingDescription, setGeneratingDescription] = useState(false);
+  const [descriptionError, setDescriptionError] = useState("");
 
   useEffect(() => {
     if (initialProduct) {
@@ -323,12 +326,63 @@ function AdminProductForm({ initialProduct, submitLabel, onSubmit, loading }) {
 
       <label className="form-field">
         <span>Description</span>
-        <textarea
-          rows="6"
-          value={formData.description}
-          onChange={(event) => updateField("description", event.target.value)}
-          placeholder="Describe the product texture, benefits, and finish."
-        />
+        <div className="admin-description-field">
+          <textarea
+            className="admin-description-textarea"
+            rows="6"
+            value={formData.description}
+            onChange={(event) => updateField("description", event.target.value)}
+            placeholder="Describe the product texture, benefits, and finish."
+          />
+          <button
+            type="button"
+            id="ai-generate-description-btn"
+            className="ai-generate-btn"
+            disabled={generatingDescription || !formData.name || !formData.category}
+            title={
+              !formData.name || !formData.category
+                ? "Enter product name and category first"
+                : "Generate product details with AI"
+            }
+            onClick={async () => {
+              if (!formData.name || !formData.category) return;
+              setGeneratingDescription(true);
+              setDescriptionError("");
+              try {
+                const response = await generateDescription({
+                  productName: formData.name,
+                  category: formData.category,
+                });
+                const details = response.data.data;
+                setFormData((current) => ({
+                  ...current,
+                  description: details.description || current.description,
+                  price: details.price !== undefined ? details.price : current.price,
+                  countInStock: details.countInStock !== undefined ? details.countInStock : current.countInStock,
+                  skinType: details.skinType || current.skinType,
+                  gender: details.gender || current.gender,
+                  tags: details.tags || current.tags,
+                }));
+              } catch {
+                setDescriptionError(
+                  "AI generation failed. Please try again or write manually."
+                );
+              } finally {
+                setGeneratingDescription(false);
+              }
+            }}
+          >
+            {generatingDescription ? "Generating..." : "✨ Generate with AI"}
+          </button>
+        </div>
+        {descriptionError && (
+          <p className="status-message error-message" style={{ marginTop: "0.5rem" }}>
+            {descriptionError}
+          </p>
+        )}
+        <span style={{ fontSize: "0.78rem", color: "var(--color-muted)", marginTop: "0.25rem", display: "block" }}>
+          Enter product name and category first, then click Generate with AI
+        </span>
       </label>
 
       <div className="admin-form-actions">

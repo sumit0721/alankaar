@@ -13,6 +13,7 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import newsletterRoutes from "./routes/newsletterRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 
 const app = express();
@@ -56,8 +57,16 @@ app.use(limiter);
 // Stricter rate limiting for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === "production" ? 50 : 5000, // Stricter in production, high in dev to prevent blocking dev reloads
+  max: process.env.NODE_ENV === "production" ? 50 : 5000,
   message: "Too many login attempts, please try again later.",
+});
+
+// AI rate limiter — protects Gemini API quota
+// 10 requests per minute per IP in production; high limit in dev.
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: process.env.NODE_ENV === "production" ? 10 : 1000,
+  message: "Too many AI requests. Please wait a moment before trying again.",
 });
 
 // ============================================
@@ -119,6 +128,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/ai", aiLimiter, aiRoutes);
 
 // ============================================
 // ERROR HANDLING

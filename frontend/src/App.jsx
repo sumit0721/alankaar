@@ -5,6 +5,7 @@ import Footer from "./components/common/Footer.jsx";
 import ProtectedRoute from "./components/common/ProtectedRoute.jsx";
 import AdminLayout from "./components/admin/AdminLayout.jsx";
 import AdminRoute from "./components/admin/AdminRoute.jsx";
+import BeautyAdvisor from "./components/ai/BeautyAdvisor.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import ProductsPage from "./pages/ProductsPage.jsx";
 import ProductDetailsPage from "./pages/ProductDetailsPage.jsx";
@@ -18,6 +19,7 @@ import OrdersPage from "./pages/OrdersPage.jsx";
 import OrderDetailsPage from "./pages/OrderDetailsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import WishlistPage from "./pages/WishlistPage.jsx";
+import SkinQuizPage from "./pages/SkinQuizPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import AdminProductsPage from "./pages/admin/AdminProductsPage.jsx";
@@ -41,6 +43,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          <Route path="/skin-quiz" element={<SkinQuizPage />} />
           <Route
             path="/checkout"
             element={
@@ -105,8 +108,12 @@ function App() {
       </main>
 
       <Footer />
+
+      {/* Beauty Advisor floating widget — rendered on every page */}
+      <BeautyAdvisor />
     </div>
   );
 }
 
 export default App;
+

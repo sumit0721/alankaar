@@ -30,6 +30,7 @@ function Navbar() {
         <nav className="nav-desktop">
           <NavLink to="/">Home</NavLink>
           <NavLink to="/products">Products</NavLink>
+          <NavLink to="/skin-quiz">Skin Quiz</NavLink>
           <NavLink to="/cart">
             Cart {totalQuantity ? `(${totalQuantity})` : ""}
           </NavLink>
@@ -87,6 +88,7 @@ function Navbar() {
         <nav className={`nav-mobile-menu ${menuOpen ? "open" : ""}`}>
           <NavLink to="/" onClick={closeMenu}>Home</NavLink>
           <NavLink to="/products" onClick={closeMenu}>Products</NavLink>
+          <NavLink to="/skin-quiz" onClick={closeMenu}>Skin Quiz</NavLink>
           {user ? (
             <>
               <NavLink to="/orders" onClick={closeMenu}>Orders</NavLink>
