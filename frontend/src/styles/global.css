@@ -3859,3 +3859,30 @@ button {
   .routine-actions .primary-button,
   .routine-actions .secondary-button { width: 100%; justify-content: center; }
 }
+
+.advisor-product-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--color-accent-dark);
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 2px solid var(--color-accent-soft);
+  padding-bottom: 1px;
+  transition: all var(--transition-base);
+}
+.advisor-product-link:hover {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+.routine-product-link {
+  color: var(--color-accent-dark);
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 2px solid var(--color-accent-soft);
+  transition: all var(--transition-base);
+}
+.routine-product-link:hover {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}

@@ -4,6 +4,23 @@ import { getModel } from "../utils/geminiClient.js";
 import Product from "../models/Product.js";
 import { logger } from "../utils/logger.js";
 
+const callGeminiSafely = async (fn) => {
+  try {
+    return await fn();
+  } catch (error) {
+    const msg = error?.message || "";
+    const status = error?.status || error?.response?.status;
+    if (status === 429 || msg.includes("429") || msg.includes("quota") || msg.includes("rate")) {
+      throw new ApiError(429, "AI service is busy. Please wait 10 seconds and try again.");
+    }
+    if (status === 503 || msg.includes("503") || msg.includes("overloaded")) {
+      throw new ApiError(503, "AI service is temporarily unavailable. Please try again in a moment.");
+    }
+    console.error("Gemini error:", msg);
+    throw new ApiError(500, "AI request failed. Please try again.");
+  }
+};
+
 // ============================================
 // FEATURE 1 — BEAUTY ADVISOR CHAT
 // ============================================
@@ -17,36 +34,29 @@ export const beautyAdvisorChat = asyncHandler(async (req, res) => {
 
   // Fetch current product catalog to ground the AI in real products only
   const products = await Product.find({})
-    .select("name category price description skinType gender tags")
-    .limit(50)
+    .select("name category price skinType gender _id")
+    .limit(30)
     .lean();
 
   const catalogSummary = products
-    .map(
-      (p) =>
-        `- ${p.name} (${p.category}, ₹${p.price}${p.skinType ? ", " + p.skinType : ""}${p.gender && p.gender !== "Unisex" ? ", for " + p.gender : ""}): ${p.description?.slice(0, 80)}`
-    )
+    .map(p => `${p.name}|${p.category}|₹${p.price}|${p.skinType || "All"}|${p._id}`)
     .join("\n");
 
-  const systemPrompt = `You are Aanya, ALANKAAR's friendly and knowledgeable AI beauty advisor. ALANKAAR is a modern Indian cosmetics brand with products for both men and women covering skincare, haircare, makeup, grooming, and body care.
+  const systemPrompt = `You are Aanya, ALANKAAR's AI beauty advisor for skincare, haircare, makeup and grooming.
 
-Your role:
-- Give helpful, friendly, and personalised beauty advice.
-- Answer questions about ALANKAAR (like its products, brand values, or shipping/returns policy).
-- Recommend specific ALANKAAR products from the catalog below whenever relevant. Always list the exact product name and price.
-- Keep responses concise — 3 to 5 sentences maximum.
-- When recommending products, explicitly state the product name and price (e.g. "Beard Growth Oil (₹449)").
-- If the user asks about men's products specifically, recommend Men or Unisex products from the catalog (such as "Men's Oil Control Face Wash (₹299)" or "Beard Growth Oil (₹449)").
-- Respond in a warm, conversational, and helpful tone — not clinical or robotic.
-- Never make up or suggest any products that are not present in the catalog below.
+Rules:
+- Max 4 sentences per reply
+- Only recommend products from catalog below
+- Format product recommendations as: [PRODUCT:ProductName:ProductID]
+- Redirect non-beauty questions politely
+- Website info: products at /products, skin quiz at /skin-quiz, orders at /orders
 
-ALANKAAR Product Catalog:
-${catalogSummary}
+Catalog (name|category|price|skinType|id):
+${catalogSummary}`;
 
-Important: Only recommend products from the catalog above. If no product fits perfectly, give general advice and suggest they browse the full collection.`;
-
-  // Build conversation history for multi-turn context
-  const conversationHistory = (history || []).map((msg) => ({
+  // Build conversation history for multi-turn context (keep last 6 messages only)
+  const trimmedHistory = (history || []).slice(-6);
+  const conversationHistory = trimmedHistory.map((msg) => ({
     role: msg.role === "user" ? "user" : "model",
     parts: [{ text: msg.content }],
   }));
@@ -71,21 +81,12 @@ Important: Only recommend products from the catalog above. If no product fits pe
       ...conversationHistory,
     ],
     generationConfig: {
-      maxOutputTokens: 500, // Increased to avoid cutoffs
+      maxOutputTokens: 500,
       temperature: 0.7,
     },
   });
 
-  let result;
-  try {
-    result = await chat.sendMessage(message);
-  } catch (err) {
-    logger.error("Gemini API Chat failed", { message: err.message, stack: err.stack });
-    throw new ApiError(
-      503,
-      "Aanya is currently busy assisting other customers. Please try sending your message again in a moment."
-    );
-  }
+  const result = await callGeminiSafely(() => chat.sendMessage(message));
   const reply = result.response.text();
 
   res.status(200).json({
@@ -118,51 +119,29 @@ export const generateRoutine = asyncHandler(async (req, res) => {
   };
   const maxBudget = budgetMap[budget] || 99999;
 
-  const affordableProducts = products.filter((p) => p.price <= maxBudget);
+  const affordableProducts = products
+    .filter((p) => p.price <= maxBudget)
+    .slice(0, 20); // Hard cap — never send more than 20 products
 
   const catalogSummary = affordableProducts
-    .map(
-      (p) =>
-        `- ${p.name} (${p.category}, ₹${p.price}, ${p.skinType || "All Types"}): ${p.description?.slice(0, 100)}`
-    )
+    .map(p => `${p.name}|${p.category}|₹${p.price}|${p._id}`)
     .join("\n");
 
-  const prompt = `You are an expert skincare and beauty consultant for ALANKAAR, an Indian cosmetics brand.
+  const prompt = `Beauty consultant for ALANKAAR cosmetics.
 
-A customer has completed the following skin assessment:
-- Skin/Hair Type: ${skinType}
-- Main Concern: ${mainConcern}
-- Budget: ${budget === "under-500" ? "Under ₹500 per product" : budget === "500-1000" ? "₹500–₹1000 per product" : "Above ₹1000 per product"}
-- Routine Preference: ${routinePreference}
-- Age Group: ${ageGroup}
+Customer: skin=${skinType}, concern=${mainConcern}, budget=${budget}, routine=${routinePreference}, age=${ageGroup}
 
-Available ALANKAAR Products (within their budget):
+Products (name|category|price|id):
 ${catalogSummary}
 
-Create a personalised routine using ONLY products from the list above. If a step has no suitable product, skip that step rather than inventing products.
+Build a personalised routine using ONLY products above. Skip steps with no match.
 
-Respond with ONLY valid JSON in this exact format with no markdown, no code blocks, no extra text:
+Respond ONLY in valid JSON, no markdown, no code blocks:
 {
-  "summary": "2 sentence personalised summary of their skin profile and what their routine focuses on",
-  "morning": [
-    {
-      "step": 1,
-      "productName": "exact product name from catalog",
-      "category": "product category",
-      "price": 000,
-      "instruction": "specific how-to-use instruction for their skin type"
-    }
-  ],
-  "evening": [
-    {
-      "step": 1,
-      "productName": "exact product name from catalog",
-      "category": "product category",
-      "price": 000,
-      "instruction": "specific how-to-use instruction for their skin type"
-    }
-  ],
-  "tip": "one personalised pro tip for their specific concern"
+  "summary": "2 sentence summary",
+  "morning": [{"step":1,"productName":"exact name","productId":"id","category":"cat","price":0,"instruction":"specific instruction"}],
+  "evening": [{"step":1,"productName":"exact name","productId":"id","category":"cat","price":0,"instruction":"specific instruction"}],
+  "tip": "one pro tip"
 }`;
 
   const model = getModel({
@@ -171,16 +150,8 @@ Respond with ONLY valid JSON in this exact format with no markdown, no code bloc
       temperature: 0.2,
     },
   });
-  let result;
-  try {
-    result = await model.generateContent(prompt);
-  } catch (err) {
-    logger.error("Gemini API generateRoutine failed", { message: err.message, stack: err.stack });
-    throw new ApiError(
-      503,
-      "The routine builder service is currently experiencing high demand. Please try again in a few seconds."
-    );
-  }
+
+  const result = await callGeminiSafely(() => model.generateContent(prompt));
   const rawText = result.response.text();
 
   let routine;
@@ -242,16 +213,7 @@ Respond with ONLY valid JSON in this exact format with no markdown, no code bloc
     },
   });
 
-  let result;
-  try {
-    result = await model.generateContent(prompt);
-  } catch (err) {
-    logger.error("Gemini API generateProductDetails failed", { message: err.message, stack: err.stack });
-    throw new ApiError(
-      503,
-      "The AI product generator is currently busy. Please try again in a moment."
-    );
-  }
+  const result = await callGeminiSafely(() => model.generateContent(prompt));
   const rawText = result.response.text();
 
   let details;

@@ -24,6 +24,26 @@ function BeautyAdvisor() {
     }
   }, [isOpen, messages]);
 
+  const parseMessageWithProducts = (text) => {
+    const parts = text.split(/(\[PRODUCT:[^\]]+\])/g);
+    return parts.map((part, index) => {
+      const match = part.match(/\[PRODUCT:([^:]+):([^\]]+)\]/);
+      if (match) {
+        return (
+          <a
+            key={index}
+            href={`/products/${match[2].trim()}`}
+            className="advisor-product-link"
+            onClick={() => setIsOpen(false)}
+          >
+            🛍️ {match[1].trim()}
+          </a>
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
   const handleSend = async () => {
     const trimmed = input.trim();
     if (!trimmed || loading) return;
@@ -139,7 +159,11 @@ function BeautyAdvisor() {
                 {msg.role === "assistant" && (
                   <span className="beauty-advisor-message-avatar">✨</span>
                 )}
-                <div className="beauty-advisor-bubble">{msg.content}</div>
+                <div className="beauty-advisor-bubble">
+                  {msg.role === "assistant"
+                    ? parseMessageWithProducts(msg.content)
+                    : msg.content}
+                </div>
               </div>
             ))}
 

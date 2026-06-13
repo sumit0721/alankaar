@@ -1,47 +1,73 @@
 import { useEffect, useState } from "react";
-
 import SkeletonCard from "../common/SkeletonCard.jsx";
 import ProductGrid from "../products/ProductGrid.jsx";
 import { getProducts } from "../../services/productService.js";
-import { buildCacheKey, readCache, writeCache } from "../../utils/productCache.js";
-
-const FEATURED_CACHE_KEY = buildCacheKey({ featured: "true" });
 
 function FeaturedProducts() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [products, setProducts] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem("featured_products");
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < 5 * 60 * 1000) return data;
+      }
+    } catch {}
+    return null;
+  });
+
+  const [loading, setLoading] = useState(products === null);
 
   useEffect(() => {
-    const loadFeaturedProducts = async () => {
-      // ── Show cached data instantly if available ──────────────────────
-      const cached = readCache(FEATURED_CACHE_KEY);
-      if (cached) {
-        setProducts(cached);
-        setLoading(false);
-        // Continue to fetch fresh data in background (stale-while-revalidate)
-      }
+    let cancelled = false;
+    let retryTimer = null;
 
+    const fetchFeatured = async (attempt = 1) => {
       try {
         const response = await getProducts({ featured: true });
-        const freshData = response.data.data;
-        setProducts(freshData);
-        writeCache(FEATURED_CACHE_KEY, freshData);
-      } catch (requestError) {
-        // Only show error if we have no cached data to fall back on
-        if (!cached) {
-          setError(
-            requestError.response?.data?.message ||
-              "Unable to load featured products right now."
-          );
-        }
-      } finally {
+        if (cancelled) return;
+        const data = response.data.data || response.data;
+        setProducts(data);
         setLoading(false);
+        sessionStorage.setItem(
+          "featured_products",
+          JSON.stringify({ data, timestamp: Date.now() })
+        );
+      } catch {
+        if (cancelled) return;
+        if (attempt < 4) {
+          const delay = attempt === 1 ? 5000 : attempt === 2 ? 15000 : 40000;
+          retryTimer = setTimeout(() => fetchFeatured(attempt + 1), delay);
+        }
       }
     };
 
-    loadFeaturedProducts();
+    fetchFeatured();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(retryTimer);
+    };
   }, []);
+
+  if (loading) {
+    return (
+      <section className="section-block">
+        <div className="container">
+          <div className="section-heading">
+            <span className="eyebrow">Featured</span>
+            <h2>Bestsellers your customers notice first</h2>
+          </div>
+          <div className="card-grid">
+            {[1, 2, 3, 4].map((n) => (
+              <SkeletonCard key={n} />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!products || products.length === 0) return null;
 
   return (
     <section className="section-block">
@@ -50,16 +76,7 @@ function FeaturedProducts() {
           <span className="eyebrow">Featured</span>
           <h2>Bestsellers your customers notice first</h2>
         </div>
-
-        {loading ? (
-          <div className="card-grid">
-            {[1, 2, 3, 4, 5, 6].map((n) => (
-              <SkeletonCard key={n} />
-            ))}
-          </div>
-        ) : null}
-        {error ? <p className="status-message error-message">{error}</p> : null}
-        {!loading && !error ? <ProductGrid products={products} /> : null}
+        <ProductGrid products={products} />
       </div>
     </section>
   );

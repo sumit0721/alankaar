@@ -1,42 +1,74 @@
 import { useEffect, useState } from "react";
-
-import ProductGrid from "../products/ProductGrid.jsx";
 import SkeletonCard from "../common/SkeletonCard.jsx";
+import ProductGrid from "../products/ProductGrid.jsx";
 import { getProducts } from "../../services/productService.js";
-import { buildCacheKey, readCache, writeCache } from "../../utils/productCache.js";
-
-const BESTSELLERS_CACHE_KEY = buildCacheKey({ sort: "popular", _limit: "4" });
 
 function BestSellers() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem("bestsellers_products");
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < 5 * 60 * 1000) return data;
+      }
+    } catch {}
+    return null;
+  });
+
+  const [loading, setLoading] = useState(products === null);
 
   useEffect(() => {
-    const loadPopular = async () => {
-      // ── Show cached data instantly if available ──────────────────────
-      const cached = readCache(BESTSELLERS_CACHE_KEY);
-      if (cached) {
-        setProducts(cached);
-        setLoading(false);
-        // Continue to refresh in background
-      }
+    let cancelled = false;
+    let retryTimer = null;
 
+    const fetchBestsellers = async (attempt = 1) => {
       try {
         const response = await getProducts({ sort: "popular" });
-        const freshData = response.data.data.slice(0, 4);
-        setProducts(freshData);
-        writeCache(BESTSELLERS_CACHE_KEY, freshData);
-      } catch {
-        if (!cached) {
-          setProducts([]);
-        }
-      } finally {
+        if (cancelled) return;
+        const rawData = response.data.data || response.data;
+        const data = rawData.slice(0, 4);
+        setProducts(data);
         setLoading(false);
+        sessionStorage.setItem(
+          "bestsellers_products",
+          JSON.stringify({ data, timestamp: Date.now() })
+        );
+      } catch {
+        if (cancelled) return;
+        if (attempt < 4) {
+          const delay = attempt === 1 ? 5000 : attempt === 2 ? 15000 : 40000;
+          retryTimer = setTimeout(() => fetchBestsellers(attempt + 1), delay);
+        }
       }
     };
 
-    loadPopular();
+    fetchBestsellers();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(retryTimer);
+    };
   }, []);
+
+  if (loading) {
+    return (
+      <section className="section-block">
+        <div className="container">
+          <div className="section-heading">
+            <span className="eyebrow">Popular</span>
+            <h2>Best sellers loved by our community</h2>
+          </div>
+          <div className="card-grid">
+            {[1, 2, 3, 4].map((n) => (
+              <SkeletonCard key={n} />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!products || products.length === 0) return null;
 
   return (
     <section className="section-block">
@@ -45,16 +77,7 @@ function BestSellers() {
           <span className="eyebrow">Popular</span>
           <h2>Best sellers loved by our community</h2>
         </div>
-
-        {loading ? (
-          <div className="card-grid">
-            {[1, 2, 3, 4].map((n) => (
-              <SkeletonCard key={n} />
-            ))}
-          </div>
-        ) : (
-          <ProductGrid products={products} />
-        )}
+        <ProductGrid products={products} />
       </div>
     </section>
   );

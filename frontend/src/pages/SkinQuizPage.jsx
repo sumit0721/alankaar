@@ -144,7 +144,9 @@ function SkinQuizPage() {
                         <div className="routine-step-number">{step.step}</div>
                         <div className="routine-step-content">
                           <div className="routine-step-header">
-                            <strong>{step.productName}</strong>
+                            <a href={`/products/${step.productId}`} className="routine-product-link">
+                              {step.productName}
+                            </a>
                             <span className="routine-step-price">
                               {formatCurrency(step.price)}
                             </span>
@@ -172,7 +174,9 @@ function SkinQuizPage() {
                         <div className="routine-step-number">{step.step}</div>
                         <div className="routine-step-content">
                           <div className="routine-step-header">
-                            <strong>{step.productName}</strong>
+                            <a href={`/products/${step.productId}`} className="routine-product-link">
+                              {step.productName}
+                            </a>
                             <span className="routine-step-price">
                               {formatCurrency(step.price)}
                             </span>
