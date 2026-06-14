@@ -77,20 +77,24 @@ function RegisterPage() {
       <div className="container auth-layout">
         <div className="auth-panel auth-panel-dark">
           <span className="eyebrow">Join ALANKAAR</span>
-          <h1>Create an account for a smoother cosmetic shopping flow.</h1>
-          <p>
-            Access exclusive collections, track your wishlist, and enjoy a seamless luxury 
-            shopping experience across all your devices.
+          <h1>Create an account for a smoother shopping experience.</h1>
+          <p style={{ color: "rgba(254,249,242,0.65)", marginBottom: "2rem", lineHeight: 1.7 }}>
+            Access exclusive collections, track your wishlist, and enjoy a seamless experience across all your devices.
           </p>
-
           <div className="auth-feature-list">
-            <div>
-              <strong>Quick Checkout</strong>
-              <span>Save shipping preferences to complete orders seamlessly.</span>
+            <div className="auth-feature-item">
+              <span className="auth-feature-icon">✦</span>
+              <div>
+                <strong>Quick Checkout</strong>
+                <p>Save shipping preferences to complete orders seamlessly.</p>
+              </div>
             </div>
-            <div>
-              <strong>Curated Wishlist</strong>
-              <span>Keep track of products you love and want to try next.</span>
+            <div className="auth-feature-item">
+              <span className="auth-feature-icon">✦</span>
+              <div>
+                <strong>Curated Wishlist</strong>
+                <p>Keep track of products you love and want to try next.</p>
+              </div>
             </div>
           </div>
         </div>

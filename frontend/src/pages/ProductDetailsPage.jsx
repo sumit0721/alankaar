@@ -289,8 +289,8 @@ function ProductDetailsPage() {
       {relatedProducts.length > 0 ? (
         <div className="container" style={{ marginTop: "3rem" }}>
           <div className="section-heading">
-            <span className="eyebrow">More Like This</span>
-            <h2>Related Products</h2>
+            <span className="eyebrow">Curated For You</span>
+            <h2>The Complete Ritual</h2>
           </div>
           <div className="card-grid">
             {relatedProducts.map((p) => (

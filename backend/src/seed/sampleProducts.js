@@ -382,7 +382,7 @@ const sampleProducts = [
       "A cooling, alcohol-free aftershave splash with menthol and witch hazel that soothes freshly shaved skin, reduces redness, and prevents ingrown hairs.",
     brand: "ALANKAAR",
     category: "Body Care",
-    image: "https://images.unsplash.com/photo-1626285861696-9f0bf5a49c6d?auto=format&fit=crop&w=900&q=80",
+    image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=900&q=80",
     price: 299,
     countInStock: 35,
     rating: 4.3,

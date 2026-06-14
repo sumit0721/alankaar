@@ -71,19 +71,24 @@ function LoginPage() {
       <div className="container auth-layout">
         <div className="auth-panel auth-panel-dark">
           <span className="eyebrow">Welcome Back</span>
-          <h1>Sign in to continue your glow routine.</h1>
-          <p>
-            Log in to retrieve your saved cart, manage your profile, and complete your purchase seamlessly.
+          <h1>Sign in to continue<br />your glow routine.</h1>
+          <p style={{ color: "rgba(254,249,242,0.65)", marginBottom: "2rem", lineHeight: 1.7 }}>
+            Log in to retrieve your saved cart, manage your profile, and complete your purchase.
           </p>
-
           <div className="auth-feature-list">
-            <div>
-              <strong>Personalized Experience</strong>
-              <span>Access your curated wishlist and tailored brand offers.</span>
+            <div className="auth-feature-item">
+              <span className="auth-feature-icon">✦</span>
+              <div>
+                <strong>Personalized Experience</strong>
+                <p>Access your curated wishlist and tailored brand offers.</p>
+              </div>
             </div>
-            <div>
-              <strong>Seamless Checkout</strong>
-              <span>Retrieve your saved addresses and payment options instantly.</span>
+            <div className="auth-feature-item">
+              <span className="auth-feature-icon">✦</span>
+              <div>
+                <strong>Seamless Checkout</strong>
+                <p>Retrieve your saved addresses and payment options instantly.</p>
+              </div>
             </div>
           </div>
         </div>

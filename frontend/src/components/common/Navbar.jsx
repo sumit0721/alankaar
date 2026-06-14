@@ -38,7 +38,7 @@ function Navbar() {
             <>
               <NavLink to="/orders">Orders</NavLink>
               <NavLink to="/wishlist" title="Wishlist" className="nav-icon-link">❤️</NavLink>
-              <NavLink to="/profile" title="Profile" className="nav-icon-link" style={{ color: "var(--color-accent)" }}>
+              <NavLink to="/profile" title="Profile" className="nav-icon-link" style={{ color: "var(--color-gold)" }}>
                 <svg viewBox="0 0 32 32" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ verticalAlign: "middle" }}>
                   <circle cx="16" cy="16" r="14" fill="currentColor" />
                   <circle cx="16" cy="13" r="4.5" fill="#fff" />

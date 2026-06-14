@@ -54,8 +54,8 @@ function FeaturedProducts() {
       <section className="section-block">
         <div className="container">
           <div className="section-heading">
-            <span className="eyebrow">Featured</span>
-            <h2>Bestsellers your customers notice first</h2>
+            <span className="eyebrow">Signature Collection</span>
+            <h2>The icons of our cosmetic heritage</h2>
           </div>
           <div className="card-grid">
             {[1, 2, 3, 4].map((n) => (
@@ -73,8 +73,8 @@ function FeaturedProducts() {
     <section className="section-block">
       <div className="container">
         <div className="section-heading">
-          <span className="eyebrow">Featured</span>
-          <h2>Bestsellers your customers notice first</h2>
+          <span className="eyebrow">Signature Collection</span>
+          <h2>The icons of our cosmetic heritage</h2>
         </div>
         <ProductGrid products={products} />
       </div>

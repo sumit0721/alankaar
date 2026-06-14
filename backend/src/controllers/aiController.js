@@ -9,14 +9,27 @@ const callGeminiSafely = async (fn) => {
     return await fn();
   } catch (error) {
     const msg = error?.message || "";
-    const status = error?.status || error?.response?.status;
-    if (status === 429 || msg.includes("429") || msg.includes("quota") || msg.includes("rate")) {
+    const status = error?.status || error?.response?.status || error?.httpErrorCode;
+
+    // Log the full error for debugging
+    logger.error("Gemini API call failed", {
+      message: msg,
+      status,
+      errorName: error?.name,
+      errorCode: error?.code,
+      stack: error?.stack?.split("\n").slice(0, 3).join("\n"),
+    });
+
+    // Rate limit — check status code first, then message content
+    if (status === 429 || (msg.includes("429") && msg.includes("Resource has been exhausted"))) {
       throw new ApiError(429, "AI service is busy. Please wait 10 seconds and try again.");
     }
-    if (status === 503 || msg.includes("503") || msg.includes("overloaded")) {
+    if (status === 503 || msg.includes("overloaded")) {
       throw new ApiError(503, "AI service is temporarily unavailable. Please try again in a moment.");
     }
-    console.error("Gemini error:", msg);
+    if (msg.includes("DEADLINE_EXCEEDED") || msg.includes("timeout") || msg.includes("ETIMEDOUT")) {
+      throw new ApiError(504, "AI service took too long to respond. Please try again.");
+    }
     throw new ApiError(500, "AI request failed. Please try again.");
   }
 };
@@ -42,20 +55,24 @@ export const beautyAdvisorChat = asyncHandler(async (req, res) => {
     .map(p => `${p.name}|${p.category}|₹${p.price}|${p.skinType || "All"}|${p._id}`)
     .join("\n");
 
-  const systemPrompt = `You are Aanya, ALANKAAR's AI beauty advisor for skincare, haircare, makeup and grooming.
+  const systemPrompt = `You are Aanya, ALANKAAR's friendly and knowledgeable AI beauty advisor specializing in skincare, haircare, makeup and grooming.
+
+Your personality: warm, helpful, enthusiastic about beauty. Give thorough, actionable advice.
 
 Rules:
-- Max 4 sentences per reply
-- Only recommend products from catalog below
-- Format product recommendations as: [PRODUCT:ProductName:ProductID]
-- Redirect non-beauty questions politely
-- Website info: products at /products, skin quiz at /skin-quiz, orders at /orders
+- Give complete, helpful answers. Use as many sentences as needed (typically 3-8 sentences).
+- ALWAYS recommend specific products from the catalog when relevant.
+- When mentioning a product, ALWAYS use this exact format: [PRODUCT:ProductName:ProductID]
+  Example: I recommend [PRODUCT:Rose Glow Serum:665abc123def456] for your skin.
+- Never invent products not in the catalog.
+- For non-beauty questions, politely redirect.
+- You can mention: products page at /products, skin quiz at /skin-quiz, orders at /orders.
 
-Catalog (name|category|price|skinType|id):
+ALANKAAR Product Catalog (name|category|price|skinType|id):
 ${catalogSummary}`;
 
-  // Build conversation history for multi-turn context (keep last 6 messages only)
-  const trimmedHistory = (history || []).slice(-6);
+  // Build conversation history for multi-turn context (keep last 10 messages)
+  const trimmedHistory = (history || []).slice(-10);
   const conversationHistory = trimmedHistory.map((msg) => ({
     role: msg.role === "user" ? "user" : "model",
     parts: [{ text: msg.content }],
@@ -81,8 +98,11 @@ ${catalogSummary}`;
       ...conversationHistory,
     ],
     generationConfig: {
-      maxOutputTokens: 500,
+      maxOutputTokens: 8192,
       temperature: 0.7,
+      thinkingConfig: {
+        thinkingBudget: 1024,
+      },
     },
   });
 
@@ -127,27 +147,54 @@ export const generateRoutine = asyncHandler(async (req, res) => {
     .map(p => `${p.name}|${p.category}|₹${p.price}|${p._id}`)
     .join("\n");
 
-  const prompt = `Beauty consultant for ALANKAAR cosmetics.
+  const prompt = `You are an expert skincare and beauty consultant for ALANKAAR, an Indian cosmetics brand.
 
-Customer: skin=${skinType}, concern=${mainConcern}, budget=${budget}, routine=${routinePreference}, age=${ageGroup}
+A customer has completed the following skin assessment:
+- Skin/Hair Type: ${skinType}
+- Main Concern: ${mainConcern}
+- Budget: ${budget === "under-500" ? "Under ₹500 per product" : budget === "500-1000" ? "₹500–₹1000 per product" : "Above ₹1000 per product"}
+- Routine Preference: ${routinePreference}
+- Age Group: ${ageGroup}
 
-Products (name|category|price|id):
+Available ALANKAAR Products within their budget (name|category|price|id):
 ${catalogSummary}
 
-Build a personalised routine using ONLY products above. Skip steps with no match.
+Create a personalised routine using ONLY products from the list above. If a step has no suitable product, skip that step entirely rather than inventing products.
 
-Respond ONLY in valid JSON, no markdown, no code blocks:
+Respond with ONLY valid JSON in this exact format:
 {
-  "summary": "2 sentence summary",
-  "morning": [{"step":1,"productName":"exact name","productId":"id","category":"cat","price":0,"instruction":"specific instruction"}],
-  "evening": [{"step":1,"productName":"exact name","productId":"id","category":"cat","price":0,"instruction":"specific instruction"}],
-  "tip": "one pro tip"
+  "summary": "A 2-3 sentence personalised summary of their skin profile and what this routine focuses on",
+  "morning": [
+    {
+      "step": 1,
+      "productName": "exact product name from catalog",
+      "productId": "exact _id from catalog",
+      "category": "product category",
+      "price": 299,
+      "instruction": "specific how-to-use instruction for their skin type (1-2 sentences)"
+    }
+  ],
+  "evening": [
+    {
+      "step": 1,
+      "productName": "exact product name from catalog",
+      "productId": "exact _id from catalog",
+      "category": "product category",
+      "price": 299,
+      "instruction": "specific how-to-use instruction for their skin type (1-2 sentences)"
+    }
+  ],
+  "tip": "one personalised pro tip for their specific concern"
 }`;
 
   const model = getModel({
     generationConfig: {
       responseMimeType: "application/json",
-      temperature: 0.2,
+      maxOutputTokens: 8192,
+      temperature: 0.3,
+      thinkingConfig: {
+        thinkingBudget: 1024,
+      },
     },
   });
 
@@ -156,13 +203,20 @@ Respond ONLY in valid JSON, no markdown, no code blocks:
 
   let routine;
   try {
+    // Try direct parse first
     routine = JSON.parse(rawText);
-  } catch (err) {
-    logger.error("JSON parsing error on Gemini response", { rawText, error: err.message });
-    throw new ApiError(
-      500,
-      "Failed to parse routine from AI. Please try again."
-    );
+  } catch {
+    // Sometimes Gemini wraps JSON in markdown code fences — strip them and retry
+    try {
+      const cleaned = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+      routine = JSON.parse(cleaned);
+    } catch (err) {
+      logger.error("JSON parsing error on Gemini routine response", { rawText, error: err.message });
+      throw new ApiError(
+        500,
+        "Failed to parse routine from AI. Please try again."
+      );
+    }
   }
 
   res.status(200).json({
@@ -209,7 +263,11 @@ Respond with ONLY valid JSON in this exact format with no markdown, no code bloc
   const model = getModel({
     generationConfig: {
       responseMimeType: "application/json",
+      maxOutputTokens: 4096,
       temperature: 0.3,
+      thinkingConfig: {
+        thinkingBudget: 512,
+      },
     },
   });
 

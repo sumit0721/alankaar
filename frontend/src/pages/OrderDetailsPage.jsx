@@ -153,7 +153,7 @@ function OrderDetailsPage() {
                     <Link
                       to={`/products/${item.product}?writeReview=true&name=${encodeURIComponent(item.name)}`}
                       className="text-button"
-                      style={{ fontSize: "0.85rem", color: "var(--color-accent)", textDecoration: "underline", padding: "0.25rem 0", display: "inline-flex", alignItems: "center", minHeight: "unset" }}
+                      style={{ fontSize: "0.85rem", color: "var(--color-gold-muted)", textDecoration: "underline", padding: "0.25rem 0", display: "inline-flex", alignItems: "center", minHeight: "unset" }}
                     >
                       ✍️ Review this product
                     </Link>

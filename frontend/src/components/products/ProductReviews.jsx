@@ -118,7 +118,7 @@ function ProductReviews({ productId }) {
       </div>
 
       {user && !canReview && !alreadyReviewed && (
-        <p className="status-message info-message" style={{ margin: "1rem 0", background: "var(--color-background-alt)", border: "1px solid var(--color-border)", padding: "0.75rem 1rem", borderRadius: "var(--radius-small)", color: "var(--color-muted)" }}>
+        <p className="status-message info-message" style={{ margin: "1rem 0", background: "var(--color-cream-alt)", border: "1px solid var(--color-border)", padding: "0.75rem 1rem", borderRadius: "var(--radius-small)", color: "var(--color-muted)" }}>
           🌸 Only customers who have purchased and received this product can write a review.
         </p>
       )}
