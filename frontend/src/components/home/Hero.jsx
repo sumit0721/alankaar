@@ -7,19 +7,6 @@ function Hero() {
         <div className="hero-copy">
           <span className="eyebrow">Modern Indian Luxury</span>
           <h1>Make every routine feel like an <em>exquisite ritual</em>.</h1>
-          <p className="hero-description">
-            ALANKAAR pairs botanical heritage with high-performance editorial color. 
-            Experience weightless textures and luminous finishes designed for the modern aesthetic.
-          </p>
-
-          <div className="hero-actions">
-            <Link to="/products" className="primary-button">
-              Explore Collection
-            </Link>
-            <Link to="/register" className="secondary-button">
-              Join the Brand
-            </Link>
-          </div>
 
           <div className="hero-editorial-preview">
             <div className="hero-editorial-main-card">
@@ -36,6 +23,20 @@ function Hero() {
                 <span>Silk Blush</span>
               </div>
             </div>
+          </div>
+
+          <p className="hero-description">
+            ALANKAAR pairs botanical heritage with high-performance editorial color. 
+            Experience weightless textures and luminous finishes designed for the modern aesthetic.
+          </p>
+
+          <div className="hero-actions">
+            <Link to="/products" className="primary-button">
+              Explore Collection
+            </Link>
+            <Link to="/register" className="secondary-button">
+              Join the Brand
+            </Link>
           </div>
 
           <div className="hero-metrics">

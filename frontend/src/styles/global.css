@@ -4007,16 +4007,26 @@ button {
 }
 
 @media (max-width: 768px) {
+  /* Hide original editorial cards on mobile — replaced by hero-editorial-preview */
+  .hero-card {
+    display: none;
+  }
+
   .hero-editorial-preview {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    margin-top: 1.75rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0;  /* paragraph and buttons follow after */
     border-radius: 20px;
     overflow: hidden;
     background: rgba(255, 248, 240, 0.6);
     border: 1px solid rgba(139, 101, 24, 0.15);
     padding: 0.75rem;
+  }
+
+  .hero-description {
+    margin-top: 1.5rem;
   }
 
   .hero-editorial-main-card {
