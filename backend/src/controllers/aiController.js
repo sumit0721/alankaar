@@ -4,33 +4,52 @@ import { getModel } from "../utils/geminiClient.js";
 import Product from "../models/Product.js";
 import { logger } from "../utils/logger.js";
 
-const callGeminiSafely = async (fn) => {
-  try {
-    return await fn();
-  } catch (error) {
-    const msg = error?.message || "";
-    const status = error?.status || error?.response?.status || error?.httpErrorCode;
+const callGeminiSafely = async (fn, retries = 3) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const msg = error?.message || "";
+      const status = error?.status || error?.response?.status || error?.httpErrorCode || error?.httpStatus;
+      const isRetryable = status === 503 || status === 429 || msg.includes("503") || msg.includes("429") || msg.includes("overloaded") || msg.includes("Resource has been exhausted");
 
-    // Log the full error for debugging
-    logger.error("Gemini API call failed", {
-      message: msg,
-      status,
-      errorName: error?.name,
-      errorCode: error?.code,
-      stack: error?.stack?.split("\n").slice(0, 3).join("\n"),
-    });
+      if (isRetryable && attempt < retries) {
+        const delay = attempt * 1500; // 1.5s, 3s, 4.5s
+        logger.warn(`Gemini API call failed with status ${status} on attempt ${attempt}. Retrying in ${delay}ms...`, {
+          message: msg,
+          status,
+          attempt
+        });
+        await new Promise((res) => setTimeout(res, delay));
+        continue;
+      }
 
-    // Rate limit — check status code first, then message content
-    if (status === 429 || (msg.includes("429") && msg.includes("Resource has been exhausted"))) {
-      throw new ApiError(429, "AI service is busy. Please wait 10 seconds and try again.");
+      // Log the full error details on final failure
+      logger.error("Gemini API call failed permanently after all retries", {
+        message: msg,
+        status,
+        errorName: error?.name,
+        errorCode: error?.code,
+        keys: Object.keys(error || {}),
+        stack: error?.stack?.split("\n").slice(0, 3).join("\n"),
+      });
+
+      let userMessage = "AI request failed. Please try again.";
+      let statusCode = 500;
+
+      if (status === 429 || msg.includes("429") || msg.includes("Resource has been exhausted")) {
+        userMessage = "You've hit the AI request limit. Please wait a minute and try again.";
+        statusCode = 429;
+      } else if (status === 503 || msg.includes("503") || msg.includes("overloaded")) {
+        userMessage = "AI service is under high load. Please try again in 30 seconds.";
+        statusCode = 503;
+      } else if (msg.includes("DEADLINE_EXCEEDED") || msg.includes("timeout") || msg.includes("ETIMEDOUT")) {
+        userMessage = "AI service took too long to respond. Please try again.";
+        statusCode = 504;
+      }
+
+      throw new ApiError(statusCode, userMessage);
     }
-    if (status === 503 || msg.includes("overloaded")) {
-      throw new ApiError(503, "AI service is temporarily unavailable. Please try again in a moment.");
-    }
-    if (msg.includes("DEADLINE_EXCEEDED") || msg.includes("timeout") || msg.includes("ETIMEDOUT")) {
-      throw new ApiError(504, "AI service took too long to respond. Please try again.");
-    }
-    throw new ApiError(500, "AI request failed. Please try again.");
   }
 };
 
