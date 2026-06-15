@@ -21,6 +21,25 @@ function Hero() {
             </Link>
           </div>
 
+          <div className="hero-mobile-editorial">
+            <div className="hero-editorial-chip">
+              <span className="hero-editorial-dot" style={{ background: '#c17b5a' }}></span>
+              The Festive Edit
+            </div>
+            <div className="hero-editorial-chip">
+              <span className="hero-editorial-dot" style={{ background: '#d4956a' }}></span>
+              Liquid Gold
+            </div>
+            <div className="hero-editorial-chip">
+              <span className="hero-editorial-dot" style={{ background: '#e8b4a0' }}></span>
+              Silk Blush
+            </div>
+            <div className="hero-editorial-chip">
+              <span className="hero-editorial-dot" style={{ background: '#b8841f' }}></span>
+              Dimensional Glow
+            </div>
+          </div>
+
           <div className="hero-metrics">
             <div>
                <strong>100%</strong>
