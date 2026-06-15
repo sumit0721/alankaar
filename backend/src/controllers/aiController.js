@@ -155,7 +155,14 @@ Respond with ONLY valid JSON in this exact format:
     }
   ],
   "tip": "one personalised pro tip for their specific concern"
-}`;
+}
+
+CRITICAL FORMATTING RULES:
+- Return ONLY the raw JSON object. No markdown. No backticks. No code fences.
+- Do not write anything before the opening { or after the closing }
+- Do not add explanations, notes, or commentary outside the JSON
+- The response must start with { and end with } and contain nothing else
+- No trailing newlines or whitespace after the closing brace`;
 
   let rawText;
   await callGeminiWithFallback(async (model) => {
@@ -172,22 +179,26 @@ Respond with ONLY valid JSON in this exact format:
     },
   });
 
+  // Extract JSON block — find first { and last } to handle trailing garbage
+  const jsonStart = rawText.indexOf('{');
+  const jsonEnd = rawText.lastIndexOf('}');
+
+  if (jsonStart === -1 || jsonEnd === -1 || jsonEnd <= jsonStart) {
+    logger.error('[Gemini] No valid JSON block found in routine response', { rawText });
+    throw new ApiError(500, 'Failed to parse routine from AI. Please try again.');
+  }
+
+  const jsonString = rawText.slice(jsonStart, jsonEnd + 1);
+
   let routine;
   try {
-    // Try direct parse first
-    routine = JSON.parse(rawText);
-  } catch {
-    // Sometimes Gemini wraps JSON in markdown code fences — strip them and retry
-    try {
-      const cleaned = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-      routine = JSON.parse(cleaned);
-    } catch (err) {
-      logger.error("JSON parsing error on Gemini routine response", { rawText, error: err.message });
-      throw new ApiError(
-        500,
-        "Failed to parse routine from AI. Please try again."
-      );
-    }
+    routine = JSON.parse(jsonString);
+  } catch (parseError) {
+    logger.error('[Gemini] JSON parsing error on Gemini routine response', {
+      rawText,
+      error: parseError.message
+    });
+    throw new ApiError(500, 'Failed to parse routine from AI. Please try again.');
   }
 
   res.status(200).json({
