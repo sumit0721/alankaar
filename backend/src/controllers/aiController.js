@@ -1,57 +1,8 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/apiError.js";
-import { getModel } from "../utils/geminiClient.js";
+import { callGeminiWithFallback } from "../utils/geminiClient.js";
 import Product from "../models/Product.js";
 import { logger } from "../utils/logger.js";
-
-const callGeminiSafely = async (fn, retries = 3) => {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      const msg = error?.message || "";
-      const status = error?.status || error?.response?.status || error?.httpErrorCode || error?.httpStatus;
-      const isRetryable = status === 503 || status === 429 || msg.includes("503") || msg.includes("429") || msg.includes("overloaded") || msg.includes("Resource has been exhausted");
-
-      if (isRetryable && attempt < retries) {
-        const delay = attempt * 1500; // 1.5s, 3s, 4.5s
-        logger.warn(`Gemini API call failed with status ${status} on attempt ${attempt}. Retrying in ${delay}ms...`, {
-          message: msg,
-          status,
-          attempt
-        });
-        await new Promise((res) => setTimeout(res, delay));
-        continue;
-      }
-
-      // Log the full error details on final failure
-      logger.error("Gemini API call failed permanently after all retries", {
-        message: msg,
-        status,
-        errorName: error?.name,
-        errorCode: error?.code,
-        keys: Object.keys(error || {}),
-        stack: error?.stack?.split("\n").slice(0, 3).join("\n"),
-      });
-
-      let userMessage = "AI request failed. Please try again.";
-      let statusCode = 500;
-
-      if (status === 429 || msg.includes("429") || msg.includes("Resource has been exhausted")) {
-        userMessage = "You've hit the AI request limit. Please wait a minute and try again.";
-        statusCode = 429;
-      } else if (status === 503 || msg.includes("503") || msg.includes("overloaded")) {
-        userMessage = "AI service is under high load. Please try again in 30 seconds.";
-        statusCode = 503;
-      } else if (msg.includes("DEADLINE_EXCEEDED") || msg.includes("timeout") || msg.includes("ETIMEDOUT")) {
-        userMessage = "AI service took too long to respond. Please try again.";
-        statusCode = 504;
-      }
-
-      throw new ApiError(statusCode, userMessage);
-    }
-  }
-};
 
 // ============================================
 // FEATURE 1 — BEAUTY ADVISOR CHAT
@@ -97,36 +48,36 @@ ${catalogSummary}`;
     parts: [{ text: msg.content }],
   }));
 
-  // Pass systemInstruction natively for much stronger compliance
-  const model = getModel({ systemInstruction: systemPrompt });
+  let reply;
+  await callGeminiWithFallback(async (model) => {
+    const chat = model.startChat({
+      history: [
+        {
+          role: "user",
+          parts: [{ text: "Hello" }],
+        },
+        {
+          role: "model",
+          parts: [
+            {
+              text: "Hi! I'm Aanya, your ALANKAAR beauty advisor. I'm here to help you find the perfect products and build your ideal routine. What can I help you with today?",
+            },
+          ],
+        },
+        ...conversationHistory,
+      ],
+      generationConfig: {
+        maxOutputTokens: 8192,
+        temperature: 0.7,
+        thinkingConfig: {
+          thinkingBudget: 1024,
+        },
+      },
+    });
 
-  const chat = model.startChat({
-    history: [
-      {
-        role: "user",
-        parts: [{ text: "Hello" }],
-      },
-      {
-        role: "model",
-        parts: [
-          {
-            text: "Hi! I'm Aanya, your ALANKAAR beauty advisor. I'm here to help you find the perfect products and build your ideal routine. What can I help you with today?",
-          },
-        ],
-      },
-      ...conversationHistory,
-    ],
-    generationConfig: {
-      maxOutputTokens: 8192,
-      temperature: 0.7,
-      thinkingConfig: {
-        thinkingBudget: 1024,
-      },
-    },
-  });
-
-  const result = await callGeminiSafely(() => chat.sendMessage(message));
-  const reply = result.response.text();
+    const result = await chat.sendMessage(message);
+    reply = result.response.text();
+  }, { systemInstruction: systemPrompt });
 
   res.status(200).json({
     success: true,
@@ -206,7 +157,11 @@ Respond with ONLY valid JSON in this exact format:
   "tip": "one personalised pro tip for their specific concern"
 }`;
 
-  const model = getModel({
+  let rawText;
+  await callGeminiWithFallback(async (model) => {
+    const result = await model.generateContent(prompt);
+    rawText = result.response.text();
+  }, {
     generationConfig: {
       responseMimeType: "application/json",
       maxOutputTokens: 8192,
@@ -216,9 +171,6 @@ Respond with ONLY valid JSON in this exact format:
       },
     },
   });
-
-  const result = await callGeminiSafely(() => model.generateContent(prompt));
-  const rawText = result.response.text();
 
   let routine;
   try {
@@ -279,7 +231,11 @@ Respond with ONLY valid JSON in this exact format with no markdown, no code bloc
   "tags": "tag1, tag2, tag3"
 }`;
 
-  const model = getModel({
+  let rawText;
+  await callGeminiWithFallback(async (model) => {
+    const result = await model.generateContent(prompt);
+    rawText = result.response.text();
+  }, {
     generationConfig: {
       responseMimeType: "application/json",
       maxOutputTokens: 4096,
@@ -289,9 +245,6 @@ Respond with ONLY valid JSON in this exact format with no markdown, no code bloc
       },
     },
   });
-
-  const result = await callGeminiSafely(() => model.generateContent(prompt));
-  const rawText = result.response.text();
 
   let details;
   try {
