@@ -139,9 +139,8 @@ button {
   min-height: 520px;
   padding: 2rem;
   overflow: hidden;
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.86), rgba(246, 221, 206, 0.88)),
-    var(--color-surface-strong);
+  background: rgba(255, 248, 240, 0.6);
+  border: 1px solid rgba(139, 101, 24, 0.15);
 }
 
 .eyebrow {
@@ -641,8 +640,7 @@ button {
   height: 100%;
   min-height: 350px;
   background:
-    linear-gradient(180deg, rgba(66, 40, 31, 0.05), rgba(55, 28, 20, 0.72)),
-    linear-gradient(135deg, #f1c3a8, #c27152 60%, #5e3022);
+    linear-gradient(170deg, #3d1f14 0%, #5c2d1e 40%, #7a3a22 100%);
 }
 
 .hero-showcase-row {
@@ -657,11 +655,11 @@ button {
 
 .hero-showcase-small {
   min-height: 145px;
-  background: linear-gradient(160deg, #d99376, #8e4a30);
+  background: linear-gradient(145deg, #c17b5a, #8b4a2f);
 }
 
 .hero-showcase-small.alt {
-  background: linear-gradient(160deg, #f2c9b5, #bf7959);
+  background: linear-gradient(145deg, #e8b4a0, #d4916e);
 }
 
 .story-copy p {
