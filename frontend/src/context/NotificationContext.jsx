@@ -135,13 +135,17 @@ export function NotificationProvider({ children }) {
           const unread = data.notifications.filter((n) => !n.isRead);
           setUnreadCount(unread.length);
 
-          // Show toast for each unread one not yet shown
-          unread.forEach((n) => {
-            if (!shownToastsRef.current.has(n._id)) {
-              shownToastsRef.current.add(n._id);
-              showNotificationToast(n);
-            }
-          });
+          // Show toast only once per browser session
+          const hasShownThisSession = sessionStorage.getItem("notif_shown_this_session");
+          if (!hasShownThisSession && unread.length > 0) {
+            unread.forEach((n) => {
+              if (!shownToastsRef.current.has(n._id)) {
+                shownToastsRef.current.add(n._id);
+                showNotificationToast(n);
+              }
+            });
+            sessionStorage.setItem("notif_shown_this_session", "true");
+          }
         }
       } catch {
         // Ignore JSON parse errors — heartbeat comments are not JSON
@@ -197,6 +201,7 @@ export function NotificationProvider({ children }) {
       await markAllRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
+      sessionStorage.removeItem("notif_shown_this_session");
     } catch {
       // Silent fail
     }

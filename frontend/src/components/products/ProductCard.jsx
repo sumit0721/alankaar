@@ -55,7 +55,6 @@ function ProductCard({ product }) {
     <article className="product-card">
       <div className="product-card-topline">
         <span className="product-category-badge">{product.category}</span>
-        {product.featured ? <span className="product-featured-badge">Featured</span> : null}
       </div>
 
       <button
@@ -68,13 +67,18 @@ function ProductCard({ product }) {
       </button>
 
       <Link to={`/products/${product._id}`} className="product-image-link" style={{ display: "block" }}>
-        <img
-          src={imgSrc}
-          alt={product.name}
-          className="product-image"
-          onError={handleImageError}
-          style={{ display: "block" }}
-        />
+        <div className="product-image-wrapper">
+          <img
+            src={imgSrc}
+            alt={product.name}
+            className="product-image"
+            onError={handleImageError}
+            style={{ display: "block" }}
+          />
+          {product.featured && (
+            <span className="product-featured-badge-overlay">Featured</span>
+          )}
+        </div>
       </Link>
 
       <div className="product-card-content">

@@ -9,9 +9,7 @@ html {
 body {
   margin: 0;
   font-family: var(--font-body);
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.72), transparent 30%),
-    linear-gradient(180deg, var(--color-cream) 0%, #f9f2eb 45%, var(--color-cream-alt) 100%);
+  background: linear-gradient(180deg, #e8ddd0 0%, #d4c4b0 50%, #c9b89a 100%);
   color: var(--color-text);
 }
 
@@ -104,6 +102,10 @@ button {
 .hero-section,
 .section-block {
   padding: 4rem 0;
+}
+
+.hero-section {
+  background: transparent; /* let body background show through */
 }
 
 .hero-grid,
@@ -251,6 +253,24 @@ button {
 
 .product-image {
   height: 220px;
+}
+
+.product-image-wrapper {
+  position: relative;
+}
+
+.product-featured-badge-overlay {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: rgba(17, 24, 39, 0.85);
+  color: #fff6f1;
+  backdrop-filter: blur(4px);
 }
 
 .product-image-placeholder {
@@ -3317,8 +3337,9 @@ button {
   position: fixed;
   bottom: 5.5rem;
   right: 1.5rem;
-  width: 360px;
-  max-height: 560px;
+  width: 380px;
+  height: 520px;
+  max-height: 80vh;
   background: var(--color-surface-strong);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-large);
@@ -3576,8 +3597,10 @@ button {
     bottom: 0;
     right: 0;
     left: 0;
-    width: 100%;
-    max-height: 85vh;
+    margin: 0 auto;
+    width: calc(100vw - 2rem);
+    height: 70vh;
+    max-height: 520px;
     border-radius: var(--radius-large) var(--radius-large) 0 0;
   }
   .beauty-advisor-fab {

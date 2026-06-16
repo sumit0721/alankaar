@@ -1,5 +1,5 @@
 const PING_URL = `${import.meta.env.VITE_API_BASE_URL?.replace("/api", "") || "http://localhost:5000"}/api/health`;
-const PING_INTERVAL = 8 * 60 * 1000; // 8 minutes
+const PING_INTERVAL = 4 * 60 * 1000; // 4 minutes
 const IDLE_TIMEOUT = 5 * 60 * 1000;  // 5 minutes
 
 export const initKeepAlive = () => {
