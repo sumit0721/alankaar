@@ -3,6 +3,24 @@
 Alankaar is a premium, full-stack MERN (MongoDB, Express, React, Node.js) e-commerce platform crafted for a high-end beauty and cosmetics brand. Built using modern design systems, clean architectural principles, and native web technologies, the application delivers real-time notifications, unified account controls, and secure online shopping.
 
 ---
+## Live Demo:
+(https://thealankaar.vercel.app)
+
+## DEMO SCREENSHOTS 
+
+### Home Page
+<img src = "screenshots/HOME_PAGE.png">
+
+### Admin Dashboard
+<img src = "screenshots/ADMIN_DASHBOARD.png">
+
+### Skin Quiz
+<img src = "screenshots/SKIN_QUIZ.png">
+
+### AI Beauty Advisor
+<img src = "screenshots/AI_BEAUTY_ADVISOR.png">
+
+---
 
 ## ✨ Design & Visual Philosophy
 
